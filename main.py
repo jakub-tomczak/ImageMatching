@@ -2,6 +2,8 @@ from matplotlib import pyplot as plt
 from utils.dataset_helper import load_dataset
 import argparse
 
+debug = True
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("path", help="Path to dataset.")
@@ -12,6 +14,10 @@ def parse_args():
 def main():
     path, number_of_images = parse_args()
     dataset = load_dataset(path, number_of_images)
+    if debug:
+        dataset.set_matching_images()
+    for image in dataset.images:
+        print('correct ansewer for image {} is {}.'.format(image.path, image.correct))
 
 if __name__ == "__main__":
     main()

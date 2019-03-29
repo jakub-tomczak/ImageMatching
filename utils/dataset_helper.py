@@ -1,9 +1,21 @@
 
 import skimage.io as io
-from os.path import join
+from os.path import join, isfile
 
 dataset_directory = 'data'
 extension = 'png'
+correct_filename = 'correct.txt'
+
+class Image:
+    def __init__(self, path, data):
+        self.path = path
+        self.data = data
+        # assumes that there may be more than one correct answer
+        # which is less likely
+        self.correct = []
+
+    def set_matching_images(self, matching):
+        self.correct = [int(x) for x in matching.split(' ')]
 
 class Dataset:
     def __init__(self, directory, number_of_images):
@@ -11,7 +23,13 @@ class Dataset:
         self.directory = directory
         self.number_of_images = number_of_images
         self.images_to_load = [join(directory, '{}.{}'.format(x, extension)) for x in range(number_of_images)]
-        self.images = [load_image(image) for image in self.images_to_load]
+        self.images = [Image(image, load_image(image)) for image in self.images_to_load]
+
+    def set_matching_images(self):
+        match_image_file_path = join(self.directory, correct_filename)
+        if isfile(match_image_file_path):
+            with open(match_image_file_path, 'r') as f:
+                [self.images[i].set_matching_images(f.readline()) for i in range(self.number_of_images) ]
 
 def load_image(dataset, image_name):
     return load_image(join(dataset_directory, dataset, image_name))
