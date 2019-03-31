@@ -1,10 +1,10 @@
-
 import skimage.io as io
 from os.path import join, isfile
 
 dataset_directory = 'data'
 extension = 'png'
 correct_filename = 'correct.txt'
+
 
 class Image:
     def __init__(self, path, data):
@@ -16,6 +16,7 @@ class Image:
 
     def set_matching_images(self, matching):
         self.correct = [int(x) for x in matching.split(' ')]
+
 
 class Dataset:
     def __init__(self, directory, number_of_images):
@@ -29,14 +30,17 @@ class Dataset:
         match_image_file_path = join(self.directory, correct_filename)
         if isfile(match_image_file_path):
             with open(match_image_file_path, 'r') as f:
-                [self.images[i].set_matching_images(f.readline()) for i in range(self.number_of_images) ]
+                [self.images[i].set_matching_images(f.readline()) for i in range(self.number_of_images)]
+
 
 def load_image(dataset, image_name):
     return load_image(join(dataset_directory, dataset, image_name))
 
+
 def load_image(path):
     print('loading image: {}'.format(path))
     return io.imread(path, as_gray=True)
+
 
 def load_dataset(directory, number_of_images):
     return Dataset(directory, number_of_images)
