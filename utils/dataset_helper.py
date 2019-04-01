@@ -7,9 +7,10 @@ correct_filename = 'correct.txt'
 
 
 class Image:
-    def __init__(self, path, data):
+    def __init__(self, path, data, name):
         self.path = path
         self.data = data
+        self.name = name
         # assumes that there may be more than one correct answer
         # which is less likely
         self.correct = []
@@ -24,7 +25,7 @@ class Dataset:
         self.directory = directory
         self.number_of_images = number_of_images
         self.images_to_load = [join(directory, '{}.{}'.format(x, extension)) for x in range(number_of_images)]
-        self.images = [Image(image, load_image(image)) for image in self.images_to_load]
+        self.images = [Image(image, load_image(image), i) for i, image in enumerate(self.images_to_load)]
 
     def set_matching_images(self):
         match_image_file_path = join(self.directory, correct_filename)
