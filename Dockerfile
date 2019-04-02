@@ -9,6 +9,5 @@ RUN pip install -r ${PROJECT_ROOT}/requirements.txt
 RUN apt update
 RUN apt -y install nano
 RUN rm ${PROJECT_ROOT}/requirements.txt
-# run main.py
-# we may use ENTRYPOINT as well, however it doesn't pass signals
-CMD ["python"]
+# run dataset 0 with 5 images
+CMD ["python", "piro/main.py", "piro/data/set0/", "5"]
