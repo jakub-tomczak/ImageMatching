@@ -14,7 +14,10 @@ def calculate_points(ranking, dataset: Dataset):
     images_num = len(correct)
     points = 0
     for r, c in zip(ranking, correct):
-        actual_index = r.index(c)
+        try:
+            actual_index = r.index(c)
+        except ValueError:
+            actual_index = -1
         if actual_index == -1:
             points += 1 / images_num
         else:
