@@ -90,7 +90,7 @@ class CompareResult:
                 sim = a_angle.mirror_similarity(b_angle) if a_angle.can_match(b_angle) else 0
                 if sim > 0:
                     return a_o, b_o, sim
-        return 0, 0, 0
+        return NO_SKIP_POSSIBLE - 1, NO_SKIP_POSSIBLE - 1, 0
 
 
 def calculate_angle_for_point_at(points, it: int, points_number: int):
