@@ -7,6 +7,8 @@ from skimage.transform import resize
 from utils.dataset_helper import Image, Dataset
 
 DEBUG = False
+DEBUG_FIND_BASE = True
+DEBUG_DISPLAY_IMAGES = False
 NO_SKIP_POSSIBLE = 3
 ACCEPT_STRAIGHT_ANGLE_DIF = 10
 
@@ -103,7 +105,64 @@ def compute_angles(coords):
     return [calculate_angle_for_point_at(coords, i, points_num) for i in range(points_num)]
 
 
+# takes returns tuple (point, other_point)
+# other point is the next one if is_other_next_point
+# other point is the previous one if not is_other_next_point
+def take_two_subseqent_points_indices(point_index: int, number_of_points: int, is_other_next_point: bool) -> (int, int):
+    if is_other_next_point:
+        return point_index, (point_index + 1) % (number_of_points - 1)
+    else:
+        return (point_index- 1) % (number_of_points - 1), point_index
+
+# returns line that is the most probable base of the shape
+# returning line is a tuple of two subsequent coords or None
+# TODO
+# take two subsequent points and check wheter they create a line (example set7/1.png)
+def find_base_of_shape(coords: [[float, float]], distances: [[float, int]]) -> [int, int]:
+    base_of_shape_line = coords[distances[0][1]]
+    right_angle_detection_margin = 10
+
+
+    n = max(4, int(len(distances) * 0.4)) # allow top n distances to be taken into consideration
+    end_iteration = min(n, len(distances))
+    if end_iteration < 1 and DEBUG and DEBUG_FIND_BASE:
+        print("No distances!")
+
+    for i in range(end_iteration):
+        if DEBUG and DEBUG_FIND_BASE:
+            print('finding base, iter = {}/{}'.format(i, end_iteration-1))
+
+        candidate_start_index, candidate_end_index = take_two_subseqent_points_indices(distances[i][1], len(coords), True)
+        candidate_start = coords[candidate_start_index]
+        candidate_end = coords[candidate_end_index]
+
+        # point before candidate_start
+        previous_point_index, _ = take_two_subseqent_points_indices(candidate_start_index, len(coords), False)
+        previous_point = coords[previous_point_index]
+        # point after candidate_end
+        _, next_point_index = take_two_subseqent_points_indices(candidate_end_index, len(coords), True)
+        next_point = coords[next_point_index]
+
+        if DEBUG and DEBUG_FIND_BASE:
+            print('checking points {} {} {} and {} {} {}'.format(previous_point, candidate_start, candidate_end, candidate_start, candidate_end, next_point))
+        previous_point_angle = abs(Angle.calculate_angle_between(previous_point, candidate_start, candidate_end) - 90)
+        next_point_angle = abs(Angle.calculate_angle_between(candidate_start, candidate_end, next_point) - 90)
+
+        if DEBUG and DEBUG_FIND_BASE:
+            print('result is {} ({}) and {} ({})'.format(previous_point_angle, Angle.calculate_angle_between(previous_point, candidate_start, candidate_end), \
+                                                         next_point_angle,  Angle.calculate_angle_between(candidate_start, candidate_end, next_point)))
+
+        if previous_point_angle < right_angle_detection_margin \
+            and next_point_angle < right_angle_detection_margin:
+            base_of_shape_line = (candidate_start_index, candidate_end_index)
+            if DEBUG and DEBUG_FIND_BASE:
+                print("OK")
+            break
+    return base_of_shape_line
+
 def angles(img: Image):
+    if DEBUG:
+        print("{}image_{}{}".format('\n'*2, img.name, '-'*20))
     image = img.data
     image = resize(image, (image.shape[0] * 4, image.shape[1] * 4), anti_aliasing=True)
     con = find_contours(image, .8)
@@ -114,20 +173,25 @@ def angles(img: Image):
     # on 0th position we store distance between
     # 0th coord and 1st coord
     distances = []
-    coords_num = len(coords) # the last coord is equal to the first one so skip it
+    coords_num = len(coords) - 1 # the last coord is equal to the first one so skip it
     # calculated distances between points and append to a list
-    for i in range(coords_num):
-        distances.append( (calculate_distance_between_points(coords[i], coords[(i+1) % coords_num]), i) )
+    if coords_num > 1:
+        for i in range(coords_num):
+            distances.append( (calculate_distance_between_points(coords[i], coords[(i+1) % coords_num]), i) )
 
-    distances.sort(key = lambda x: x[0])
+    distances.sort(key = lambda x: x[0], reverse=True)
+
+    best_candidate_for_base = find_base_of_shape(coords, distances)
+
+    if DEBUG and DEBUG_DISPLAY_IMAGES:
+        show_debug_info(ang, coords, image, distances, best_candidate_for_base)
 
 
-    if DEBUG:
-        show_debug_info(ang, coords, image, distances)
+
     return ang
 
 
-def show_debug_info(ang, coords, image, distances):
+def show_debug_info(ang, coords, image, distances, best_candidate_for_base):
     fig, ax = plt.subplots()
     ax.imshow(image, interpolation='nearest', cmap=plt.cm.Greys_r)
     ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=3)
@@ -136,12 +200,20 @@ def show_debug_info(ang, coords, image, distances):
     ax.plot(coords[-2, 1], coords[-2, 0], 'o', color='orange')
 
     # draw a few longest distances
-    for i in range(1, 2):
-        p_0_index = distances[-i][1]
-        p_1_index = (p_0_index + 1) % len(distances)
+    for i in range(1):
+        color = 'yellow'
+        if best_candidate_for_base != None:
+            p_0_index, p_1_index = best_candidate_for_base
+        else:
+            color = 'blue'
+            if i >= len(distances):
+                break
+            p_0_index = distances[i][1]
+            p_1_index = (p_0_index + 1) % len(distances)
+
         xx = [coords[p_0_index][1], coords[p_1_index][1] ]
         yy = [coords[p_0_index][0], coords[p_1_index][0] ]
-        ax.plot(xx, yy, 'ro-', color='yellow')
+        ax.plot(xx, yy, 'ro-', color=color)
 
     print(ang)
     plt.show()
