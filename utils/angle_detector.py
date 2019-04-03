@@ -83,7 +83,7 @@ class CompareResult:
         for a_o in range(NO_SKIP_POSSIBLE):
             a_angle = a[(a_i + a_o) % len_a]
             for b_o in range(NO_SKIP_POSSIBLE):
-                b_angle = b[(b_i + b_offset) % len_b]
+                b_angle = b[(b_i + b_o + b_offset) % len_b]
                 sim = a_angle.mirror_similarity(b_angle) if a_angle.can_match(b_angle) else 0
                 if sim > 0:
                     return a_o, b_o, sim
