@@ -6,6 +6,32 @@ from skimage.measure import find_contours, approximate_polygon
 from utils.dataset_helper import Image, Dataset
 
 
+class Angle:
+    def __init__(self, a, b, c) -> None:
+        self.armA = Angle.pitagoras(c[1] - b[1], c[0] - b[0])
+        self.armB = Angle.pitagoras(a[1] - b[1], a[0] - b[0])
+        self.angle = Angle.calculate_angle_between(a, b, c)
+
+    @staticmethod
+    def calculate_angle_between(a, b, c):
+        ang = math.degrees(math.atan2(c[1] - b[1], c[0] - b[0]) - math.atan2(a[1] - b[1], a[0] - b[0]))
+        return ang + 360 if ang < 0 else ang
+
+    @staticmethod
+    def pitagoras(a, b):
+        return pow(a ** 2 + b ** 2, 0.5)
+
+    def __repr__(self) -> str:
+        return "{} ({}, {})".format(self.angle, self.armA, self.armB)
+
+    def can_compare_with(self, other):
+        return abs(self.armB / other.armB - self.armA / other.armA) < 0.5 or \
+               abs(self.armA / other.armB - self.armB / other.armA) < 0.5
+
+    def mirror_similarity(self, other):
+        return 1 - pow((self.angle + other.angle) / 360 - 1, 2)
+
+
 class ImageAngleData:
     def __init__(self, image: Image, angles: list):
         self.image = image
@@ -14,31 +40,28 @@ class ImageAngleData:
         self.comparisons = dict()
 
     def ranking(self):
-        return sorted(self.comparisons.items(), key=lambda x: x[1].min_dif)
+        return sorted(self.comparisons.items(), key=lambda x: x[1].similarity, reverse=True)
 
 
 class CompareResult:
     def __init__(self, first: ImageAngleData, second: ImageAngleData):
         different_offsets = dict()
-        other_len = len(second.angles_to_compare)
-        for offset in range(len(first.angles)):
-            pais = sum([pow((a + second.angles_to_compare[(offset + i) % other_len]) / 360 - 1, 2)
-                        for i, a in enumerate(first.angles)])
-            different_offsets[offset] = pais
-        self.min_dif = min(different_offsets.values())
-
-
-def angle(a, b, c):
-    ang = math.degrees(
-        math.atan2(c[1] - b[1], c[0] - b[0]) - math.atan2(a[1] - b[1], a[0] - b[0]))
-    return ang + 360 if ang < 0 else ang
+        shorter, longer = (first.angles, second.angles_to_compare) if len(first.angles) < len(second.angles) else (second.angles, first.angles_to_compare)
+        shorter_len = len(shorter)
+        longer_len = len(longer)
+        for offset in range(shorter_len):
+            values = [a.mirror_similarity(longer[(offset + i) % longer_len])
+                      for i, a in enumerate(shorter)
+                      if a.can_compare_with(longer[(offset + i) % longer_len])]
+            different_offsets[offset] = sum(values) / (shorter_len - 2)  # -2 because of the base
+        self.similarity = max(different_offsets.values())
 
 
 def calculate_angle_for_point_at(points, it: int, points_number: int):
-    return angle(
+    return Angle(
         points[(it + points_number - 1) % points_number],
         points[it],
-        points[(it + 1 + points_number) % points_number]
+        points[(it + points_number + 1) % points_number]
     )
 
 
@@ -50,16 +73,17 @@ def compute_angles(coords):
 def angles(img: Image):
     image = img.data
     # image = gaussian(image, sigma=0.5)
-    con = find_contours(image, .9)
+    con = find_contours(image, .799)
     fig, ax = plt.subplots()
     ax.imshow(image, interpolation='nearest', cmap=plt.cm.Greys_r)
 
     contour = con[0]
-    coords = approximate_polygon(contour, tolerance=2.75)
+    coords = approximate_polygon(contour, tolerance=2.5)
     ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=3)
     ax.plot(coords[0, 1], coords[0, 0], '*', color='blue')
     ax.plot(coords[1, 1], coords[1, 0], '*', color='green')
-    ang = compute_angles(coords)
+    ax.plot(coords[-2, 1], coords[-2, 0], 'o', color='orange')
+    ang = compute_angles(coords[:-1])
     print(ang)
     ax.axis('image')
     ax.set_xticks([])
