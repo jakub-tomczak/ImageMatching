@@ -13,8 +13,8 @@ ACCEPT_STRAIGHT_ANGLE_DIF = 10
 
 class Angle:
     def __init__(self, a, b, c) -> None:
-        self.armA = Angle.pitagoras(c[1] - b[1], c[0] - b[0])
-        self.armB = Angle.pitagoras(a[1] - b[1], a[0] - b[0])
+        self.armA = Angle.pitagoras(a[1] - b[1], a[0] - b[0])
+        self.armB = Angle.pitagoras(c[1] - b[1], c[0] - b[0])
         self.angle = Angle.calculate_angle_between(a, b, c)
         self.point = b
 
@@ -92,9 +92,9 @@ class CompareResult:
 
 def calculate_angle_for_point_at(points, it: int, points_number: int):
     return Angle(
-        points[(it + points_number - 1) % points_number],
+        points[(it - 1) % points_number],
         points[it],
-        points[(it + points_number + 1) % points_number]
+        points[(it + 1) % points_number]
     )
 
 
