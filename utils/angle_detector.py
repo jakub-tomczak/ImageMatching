@@ -8,6 +8,7 @@ from utils.dataset_helper import Image, Dataset
 
 DEBUG = False
 NO_SKIP_POSSIBLE = 3
+ACCEPT_STRAIGHT_ANGLE_DIF = 10
 
 
 class Angle:
@@ -40,7 +41,7 @@ class Angle:
 class ImageAngleData:
     def __init__(self, image: Image, angles: list):
         self.image = image
-        self.angles = angles
+        self.angles = [a for a in angles if abs(180 - a.angle) > ACCEPT_STRAIGHT_ANGLE_DIF]
         self.angles_to_compare = self.angles[:: -1]
         self.comparisons = dict()
 
