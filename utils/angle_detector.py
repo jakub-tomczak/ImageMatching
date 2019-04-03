@@ -31,8 +31,7 @@ class Angle:
         return "{} ({}, {})".format(self.angle, self.armA, self.armB)
 
     def can_match(self, other):
-        return abs(self.armB / other.armB - self.armA / other.armA) < 0.5 or \
-               abs(self.armA / other.armB - self.armB / other.armA) < 0.5
+        return abs(self.armA / other.armB - self.armB / other.armA) < 0.5
 
     def mirror_similarity(self, other):
         return 1 - abs((self.angle + other.angle) / 360 - 1)
@@ -51,37 +50,41 @@ class ImageAngleData:
 
 class CompareResult:
     def __init__(self, first: ImageAngleData, second: ImageAngleData):
-        different_offsets = dict()
+        different_offsets = []
         shorter, longer, first_as_first = (first.angles, second.angles_to_compare, True) if len(first.angles) < len(
             second.angles) else (
             second.angles, first.angles_to_compare, False)
         shorter_len = len(shorter)
         longer_len = len(longer)
         show = False
-        # if first.image.name == 0 and second.image.name == 6:
-        #     show = True
-        for offset in range(shorter_len):
-            a_i = 0
-            b_i = 0
-            values = []
-            points = []
-            while a_i < shorter_len and b_i < longer_len:
-                ap, bp, sim = CompareResult.find_matching_angle(shorter, longer, a_i, b_i, offset)
-                points.append((shorter[(a_i + ap) % shorter_len], longer[(b_i + bp + offset) % longer_len]))
-                a_i += ap + 1
-                b_i += bp + 1
-                values.append(sim)
-            if show:
-                show_points(first.image.data, second.image.data, points, first_as_first)
-            different_offsets[offset] = sum(values) / max((shorter_len - 2), 1)  # -2 because of the base
-        self.similarity = max(different_offsets.values())
+        offsets_shorter = [i for i in sorted(enumerate(shorter), key=lambda x:x[1].armB, reverse=True)][:2]
+        offset_longer = [i for i in sorted(enumerate(longer), key=lambda x:x[1].armA, reverse=True)][:2]
+        for offset_a, ang1 in offsets_shorter:
+            for offset_b, ang2 in offset_longer:
+                a_i = 0
+                b_i = 0
+                values = []
+                points = []
+                while a_i < shorter_len and b_i < longer_len:
+                    ap, bp, sim = CompareResult.find_matching_angle(shorter, longer, a_i, b_i, offset_a, offset_b)
+                    points.append((
+                        shorter[(a_i + ap + offset_a) % shorter_len],
+                        longer[(b_i + bp + offset_b) % longer_len])
+                    )
+                    a_i += ap + 1
+                    b_i += bp + 1
+                    values.append(sim)
+                if show:
+                    show_points(first.image.data, second.image.data, points, first_as_first)
+                different_offsets.append(sum(values) / max((shorter_len - 2), 1))  # -2 because of the base
+        self.similarity = max(different_offsets)
 
     @staticmethod
-    def find_matching_angle(a, b, a_i, b_i, b_offset):
+    def find_matching_angle(a, b, a_i, b_i, a_offset, b_offset):
         len_a = len(a)
         len_b = len(b)
         for a_o in range(NO_SKIP_POSSIBLE):
-            a_angle = a[(a_i + a_o) % len_a]
+            a_angle = a[(a_i + a_o + a_offset) % len_a]
             for b_o in range(NO_SKIP_POSSIBLE):
                 b_angle = b[(b_i + b_o + b_offset) % len_b]
                 sim = a_angle.mirror_similarity(b_angle) if a_angle.can_match(b_angle) else 0
