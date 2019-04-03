@@ -110,18 +110,39 @@ def angles(img: Image):
     contour = con[0]
     coords = approximate_polygon(contour, tolerance=6)
     ang = compute_angles(coords[:-1])
+
+    # on 0th position we store distance between
+    # 0th coord and 1st coord
+    distances = []
+    coords_num = len(coords) # the last coord is equal to the first one so skip it
+    # calculated distances between points and append to a list
+    for i in range(coords_num):
+        distances.append( (calculate_distance_between_points(coords[i], coords[(i+1) % coords_num]), i) )
+
+    distances.sort(key = lambda x: x[0])
+
+
     if DEBUG:
-        show_debug_info(ang, coords, image)
+        show_debug_info(ang, coords, image, distances)
     return ang
 
 
-def show_debug_info(ang, coords, image):
+def show_debug_info(ang, coords, image, distances):
     fig, ax = plt.subplots()
     ax.imshow(image, interpolation='nearest', cmap=plt.cm.Greys_r)
     ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=3)
     ax.plot(coords[0, 1], coords[0, 0], '*', color='blue')
     ax.plot(coords[1, 1], coords[1, 0], '*', color='green')
     ax.plot(coords[-2, 1], coords[-2, 0], 'o', color='orange')
+
+    # draw a few longest distances
+    for i in range(1, 2):
+        p_0_index = distances[-i][1]
+        p_1_index = (p_0_index + 1) % len(distances)
+        xx = [coords[p_0_index][1], coords[p_1_index][1] ]
+        yy = [coords[p_0_index][0], coords[p_1_index][0] ]
+        ax.plot(xx, yy, 'ro-', color='yellow')
+
     print(ang)
     plt.show()
 
@@ -155,3 +176,6 @@ def get_ranking(dataset: Dataset):
             a2.comparisons[a1] = compare_res
 
     return [[r[0].image.name for r in a.ranking()] for a in ang]
+
+def calculate_distance_between_points(first_coords: (int, int), second_coords: (int, int)):
+    return Angle.pitagoras(abs(first_coords[0] - second_coords[0]), abs(first_coords[1] - second_coords[1]))
