@@ -177,16 +177,14 @@ def angles(img: Image):
     # calculated distances between points and append to a list
     if coords_num > 1:
         for i in range(coords_num):
-            distances.append( (calculate_distance_between_points(coords[i], coords[(i+1) % coords_num]), i) )
+            p0, p1 = take_two_subseqent_points_indices(i, len(coords), True)
+            distances.append( (calculate_distance_between_points(coords[p0], coords[p1]), i) )
 
     distances.sort(key = lambda x: x[0], reverse=True)
-
     best_candidate_for_base = find_base_of_shape(coords, distances)
 
     if DEBUG and DEBUG_DISPLAY_IMAGES:
         show_debug_info(ang, coords, image, distances, best_candidate_for_base)
-
-
 
     return ang
 
