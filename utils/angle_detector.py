@@ -14,10 +14,27 @@ NO_SKIP_POSSIBLE = 3
 ACCEPT_STRAIGHT_ANGLE_DIF = 10
 
 
+class Arm:
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+        self.length = Arm.pitagoras(a[1] - b[1], a[0] - b[0])
+
+    def angle(self):
+        return math.degrees(math.atan2(self.a[0] - self.b[0], self.a[1] - self.b[1]))
+
+    @staticmethod
+    def pitagoras(a, b):
+        return pow(a ** 2 + b ** 2, 0.5)
+
+    def __repr__(self) -> str:
+        return "Arm({} - {} [{}])".format(self.a, self.b, self.length)
+
+
 class Angle:
     def __init__(self, a, b, c) -> None:
-        self.armA = Angle.pitagoras(a[1] - b[1], a[0] - b[0])
-        self.armB = Angle.pitagoras(c[1] - b[1], c[0] - b[0])
+        self.armA = Arm(a, b)
+        self.armB = Arm(b, c)
         self.angle = Angle.calculate_angle_between(a, b, c)
         self.point = b
 
@@ -26,16 +43,12 @@ class Angle:
         ang = math.degrees(math.atan2(c[0] - b[0], c[1] - b[1]) - math.atan2(a[0] - b[0], a[1] - b[1]))
         return ang + 360 if ang < 0 else ang
 
-    @staticmethod
-    def pitagoras(a, b):
-        return pow(a ** 2 + b ** 2, 0.5)
-
     def __repr__(self) -> str:
         return "{} ({}, {})".format(self.angle, self.armA, self.armB)
 
     def can_match(self, other):
-        first_ratio = self.armA / other.armB
-        second_ratio = self.armB / other.armA
+        first_ratio = self.armA.length / other.armB.length
+        second_ratio = self.armB.length / other.armA.length
         return abs(1 - first_ratio / second_ratio) < 0.25
 
     def mirror_similarity(self, other):
@@ -46,7 +59,7 @@ class ImageAngleData:
     def __init__(self, image: Image, angles: list):
         self.image = image
         self.angles = [a for a in angles if abs(180 - a.angle) > ACCEPT_STRAIGHT_ANGLE_DIF]
-        self.possible_bases = [i for i in sorted(enumerate(self.angles), key=lambda x:x[1].armA, reverse=True)][:2]
+        self.possible_bases = [i for i in sorted(enumerate(self.angles), key=lambda x: x[1].armA.length, reverse=True)][:2]
         self.comparisons = dict()
 
     def ranking(self):
@@ -56,8 +69,8 @@ class ImageAngleData:
 class CompareResult:
     def __init__(self, first: ImageAngleData, second: ImageAngleData):
         different_offsets = []
-        shorter, longer, first_as_first = (first, second, True)\
-            if len(first.angles) < len(second.angles)\
+        shorter, longer, first_as_first = (first, second, True) \
+            if len(first.angles) < len(second.angles) \
             else (second, first, False)
         shorter_len = len(shorter.angles)
         longer_len = len(longer.angles)
@@ -69,7 +82,8 @@ class CompareResult:
                 values = []
                 points = []
                 while a_i < shorter_len and b_i < longer_len:
-                    ap, bp, sim = CompareResult.find_matching_angle(shorter.angles, longer.angles, a_i, b_i, offset_a, offset_b)
+                    ap, bp, sim = CompareResult.find_matching_angle(shorter.angles, longer.angles, a_i, b_i, offset_a,
+                                                                    offset_b)
                     points.append((
                         shorter.angles[(a_i + ap + offset_a) % shorter_len],
                         longer.angles[(offset_b - b_i - bp) % longer_len])
