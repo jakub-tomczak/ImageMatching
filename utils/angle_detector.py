@@ -31,7 +31,9 @@ class Angle:
         return "{} ({}, {})".format(self.angle, self.armA, self.armB)
 
     def can_match(self, other):
-        return abs(self.armA / other.armB - self.armB / other.armA) < 0.5
+        first_ratio = self.armA / other.armB
+        second_ratio = self.armB / other.armA
+        return abs(1 - first_ratio / second_ratio) < 0.25
 
     def mirror_similarity(self, other):
         return 1 - abs((self.angle + other.angle) / 360 - 1)
