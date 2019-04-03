@@ -36,9 +36,9 @@ def main():
     if debug:
         dataset.set_matching_images()
         for image in dataset.images:
-            print(f'correct answer for image {image.name} is {image.correct}.')
+            print("correct answer for image {} is {}.".format(image.name, image.correct))
         points = calculate_points(ranking, dataset)
-        print(f'received points: {points}')
+        print("received points: {}".format(points))
 
 
 if __name__ == "__main__":
