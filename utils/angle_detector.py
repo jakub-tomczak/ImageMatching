@@ -59,7 +59,8 @@ class ImageAngleData:
     def __init__(self, image: Image, angles: list):
         self.image = image
         self.angles = [a for a in angles if abs(180 - a.angle) > ACCEPT_STRAIGHT_ANGLE_DIF]
-        self.possible_bases = [i for i in sorted(enumerate(self.angles), key=lambda x: x[1].armA.length, reverse=True)][:2]
+        self.possible_bases = [i for i in sorted(enumerate(self.angles), key=lambda x: x[1].armA.length, reverse=True)][
+                              :2]
         self.comparisons = dict()
 
     def ranking(self):
@@ -130,7 +131,8 @@ def take_two_subseqent_points_indices(point_index: int, number_of_points: int, i
     if is_other_next_point:
         return point_index, (point_index + 1) % (number_of_points - 1)
     else:
-        return (point_index- 1) % (number_of_points - 1), point_index
+        return (point_index - 1) % (number_of_points - 1), point_index
+
 
 # returns line that is the most probable base of the shape
 # returning line is a tuple of two subsequent coords or None
@@ -140,17 +142,17 @@ def find_base_of_shape(coords: [[float, float]], distances: [[float, int]]) -> [
     base_of_shape_line = None
     right_angle_detection_margin = 10
 
-
-    n = max(4, int(len(distances) * 0.4)) # allow top n distances to be taken into consideration
+    n = max(4, int(len(distances) * 0.4))  # allow top n distances to be taken into consideration
     end_iteration = min(n, len(distances))
     if end_iteration < 1 and DEBUG and DEBUG_FIND_BASE:
         print("No distances!")
 
     for i in range(end_iteration):
         if DEBUG and DEBUG_FIND_BASE:
-            print('finding base, iter = {}/{}'.format(i, end_iteration-1))
+            print('finding base, iter = {}/{}'.format(i, end_iteration - 1))
 
-        candidate_start_index, candidate_end_index = take_two_subseqent_points_indices(distances[i][1], len(coords), True)
+        candidate_start_index, candidate_end_index = take_two_subseqent_points_indices(distances[i][1], len(coords),
+                                                                                       True)
         candidate_start = coords[candidate_start_index]
         candidate_end = coords[candidate_end_index]
 
@@ -162,25 +164,31 @@ def find_base_of_shape(coords: [[float, float]], distances: [[float, int]]) -> [
         next_point = coords[next_point_index]
 
         if DEBUG and DEBUG_FIND_BASE:
-            print('checking points {} {} {} and {} {} {}'.format(previous_point, candidate_start, candidate_end, candidate_start, candidate_end, next_point))
+            print('checking points {} {} {} and {} {} {}'.format(previous_point, candidate_start, candidate_end,
+                                                                 candidate_start, candidate_end, next_point))
         previous_point_angle = abs(Angle.calculate_angle_between(previous_point, candidate_start, candidate_end) - 90)
         next_point_angle = abs(Angle.calculate_angle_between(candidate_start, candidate_end, next_point) - 90)
 
         if DEBUG and DEBUG_FIND_BASE:
-            print('result is {} ({}) and {} ({})'.format(previous_point_angle, Angle.calculate_angle_between(previous_point, candidate_start, candidate_end), \
-                                                         next_point_angle,  Angle.calculate_angle_between(candidate_start, candidate_end, next_point)))
+            print('result is {} ({}) and {} ({})'.format(previous_point_angle,
+                                                         Angle.calculate_angle_between(previous_point, candidate_start,
+                                                                                       candidate_end), \
+                                                         next_point_angle,
+                                                         Angle.calculate_angle_between(candidate_start, candidate_end,
+                                                                                       next_point)))
 
         if previous_point_angle < right_angle_detection_margin \
-            and next_point_angle < right_angle_detection_margin:
+                and next_point_angle < right_angle_detection_margin:
             base_of_shape_line = (candidate_start_index, candidate_end_index)
             if DEBUG and DEBUG_FIND_BASE:
                 print("OK")
             break
     return base_of_shape_line
 
+
 def angles(img: Image):
     if DEBUG:
-        print("{}image_{}{}".format('\n'*2, img.name, '-'*20))
+        print("{}image_{}{}".format('\n' * 2, img.name, '-' * 20))
     image = img.data
     image = resize(image, (image.shape[0] * 4, image.shape[1] * 4), anti_aliasing=True)
     con = find_contours(image, .8)
@@ -191,14 +199,14 @@ def angles(img: Image):
     # on 0th position we store distance between
     # 0th coord and 1st coord
     distances = []
-    coords_num = len(coords) - 1 # the last coord is equal to the first one so skip it
+    coords_num = len(coords) - 1  # the last coord is equal to the first one so skip it
     # calculated distances between points and append to a list
     if coords_num > 1:
         for i in range(coords_num):
             p0, p1 = take_two_subseqent_points_indices(i, len(coords), True)
-            distances.append( (calculate_distance_between_points(coords[p0], coords[p1]), i) )
+            distances.append((calculate_distance_between_points(coords[p0], coords[p1]), i))
 
-    distances.sort(key = lambda x: x[0], reverse=True)
+    distances.sort(key=lambda x: x[0], reverse=True)
     best_candidate_for_base = find_base_of_shape(coords, distances)
 
     if DEBUG and DEBUG_DISPLAY_IMAGES:
@@ -262,6 +270,7 @@ def get_ranking(dataset: Dataset):
             a2.comparisons[a1] = compare_res
 
     return [[r[0].image.name for r in a.ranking()] for a in ang]
+
 
 def calculate_distance_between_points(first_coords: (int, int), second_coords: (int, int)):
     return Angle.pitagoras(abs(first_coords[0] - second_coords[0]), abs(first_coords[1] - second_coords[1]))
