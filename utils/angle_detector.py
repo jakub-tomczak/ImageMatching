@@ -6,10 +6,8 @@ from skimage.transform import resize
 
 from utils.dataset_helper import Image, Dataset
 from utils.plotting_helper import plot_line
+from utils.debug_conf import *
 
-DEBUG = False
-DEBUG_FIND_BASE = True
-DEBUG_DISPLAY_IMAGES = False
 NO_SKIP_POSSIBLE = 3
 ACCEPT_STRAIGHT_ANGLE_DIF = 10
 

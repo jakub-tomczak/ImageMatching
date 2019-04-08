@@ -3,8 +3,7 @@ import argparse
 from utils.angle_detector import get_ranking
 from utils.dataset_helper import load_dataset
 from utils.debug_helper import print_debug_info
-
-debug = True
+from utils.debug_conf import *
 
 
 def parse_args():
@@ -21,7 +20,7 @@ def main():
     ranking = get_ranking(dataset)
     for r in ranking:
         print(" ".join(str(i) for i in r))
-    if debug:
+    if DEBUG:
         print_debug_info(dataset, ranking)
 
 
