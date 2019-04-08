@@ -273,4 +273,4 @@ def get_ranking(dataset: Dataset):
 
 
 def calculate_distance_between_points(first_coords: (int, int), second_coords: (int, int)):
-    return Angle.pitagoras(abs(first_coords[0] - second_coords[0]), abs(first_coords[1] - second_coords[1]))
+    return Arm.pitagoras(abs(first_coords[0] - second_coords[0]), abs(first_coords[1] - second_coords[1]))
