@@ -5,6 +5,7 @@ from skimage.measure import find_contours, approximate_polygon
 from skimage.transform import resize
 
 from utils.dataset_helper import Image, Dataset
+from utils.plotting_helper import plot_line
 
 DEBUG = False
 DEBUG_FIND_BASE = True
@@ -212,9 +213,7 @@ def show_debug_info(ang, coords, image, distances, best_candidate_for_base):
             p_0_index = distances[i][1]
             p_1_index = (p_0_index + 1) % len(distances)
 
-        xx = [coords[p_0_index][1], coords[p_1_index][1] ]
-        yy = [coords[p_0_index][0], coords[p_1_index][0] ]
-        ax.plot(xx, yy, 'ro-', color=color)
+        plot_line(ax, coords[p_0_index], coords[p_1_index], color)
 
     print(ang)
     plt.show()
