@@ -218,7 +218,7 @@ def show_debug_info(ang, coords, image, distances, best_candidate_for_base):
     # draw a few longest distances
     for i in range(1):
         color = 'yellow'
-        if best_candidate_for_base != None:
+        if best_candidate_for_base is not None:
             p_0_index, p_1_index = best_candidate_for_base
         else:
             color = 'blue'
