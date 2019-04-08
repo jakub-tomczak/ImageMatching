@@ -122,7 +122,7 @@ def take_two_subseqent_points_indices(point_index: int, number_of_points: int, i
 # TODO
 # take two subsequent points and check wheter they create a line (example set7/1.png)
 def find_base_of_shape(coords: [[float, float]], distances: [[float, int]]) -> [int, int]:
-    base_of_shape_line = coords[distances[0][1]]
+    base_of_shape_line = None
     right_angle_detection_margin = 10
 
 
