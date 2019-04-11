@@ -42,11 +42,10 @@ class Angle:
 
 
 class ImageAngleData:
-    def __init__(self, image: Image, angles: list):
+    def __init__(self, image: Image, angles: list, possible_bases: [Arm]):
         self.image = image
         self.angles = angles
-        self.possible_bases = [i for i in sorted(enumerate(self.angles), key=lambda x: x[1].armA.length, reverse=True)][
-                              :2]
+        self.possible_bases = possible_bases
         self.comparisons = dict()
 
     def ranking(self):

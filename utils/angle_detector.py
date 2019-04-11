@@ -120,8 +120,8 @@ def find_base_of_shape(coords: [[float, float]], distances: [[float, int]]) -> [
         if DEBUG and DEBUG_FIND_BASE:
             print('finding base, iter = {}/{}'.format(i, end_iteration - 1))
 
-        candidate_start_index, candidate_end_index = take_two_subseqent_points_indices(distances[i][1], len(coords),
-                                                                                       True)
+        candidate_start_index, candidate_end_index = \
+            take_two_subseqent_points_indices(distances[i][1], len(coords), True)
         candidate_start = coords[candidate_start_index]
         candidate_end = coords[candidate_end_index]
 
@@ -184,7 +184,7 @@ def angles(img: Image):
 
 
 def get_ranking(dataset: Dataset):
-    ang = [ImageAngleData(img, angles(img)) for img in dataset.images]
+    ang = [prepare_image_data(img) for img in dataset.images]
     for i1, a1 in enumerate(ang):
         for i2, a2 in enumerate(ang[i1 + 1:]):
             compare_res = CompareResult(a1, a2)
@@ -192,3 +192,13 @@ def get_ranking(dataset: Dataset):
             a2.comparisons[a1] = compare_res
 
     return [[r[0].image.name for r in a.ranking()] for a in ang]
+
+
+def prepare_image_data(img: Image):
+    ang = angles(img)
+    best_bases = find_best_bases(ang)
+    return ImageAngleData(img, ang, best_bases)
+
+
+def find_best_bases(angles: [Angle]):
+    return [i for i in sorted(enumerate(angles), key=lambda x: x[1].armA.length, reverse=True)][:2]
