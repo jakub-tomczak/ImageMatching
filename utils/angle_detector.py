@@ -164,19 +164,17 @@ def find_base_of_shape(coords: [[float, float]], distances: [[float, int]]) -> [
         if DEBUG and DEBUG_FIND_BASE:
             print('checking points {} {} {} and {} {} {}'.format(previous_point, candidate_start, candidate_end,
                                                                  candidate_start, candidate_end, next_point))
-        previous_point_angle = abs(Angle.calculate_angle_between(previous_point, candidate_start, candidate_end) - 90)
-        next_point_angle = abs(Angle.calculate_angle_between(candidate_start, candidate_end, next_point) - 90)
+        angle_between_prev_and_start = Angle.calculate_angle_between(previous_point, candidate_start, candidate_end)
+        previous_point_angle = abs(angle_between_prev_and_start - 90)
+        angle_between_start_and_end = Angle.calculate_angle_between(candidate_start, candidate_end, next_point)
+        next_point_angle = abs(angle_between_start_and_end - 90)
 
         if DEBUG and DEBUG_FIND_BASE:
-            print('result is {} ({}) and {} ({})'.format(previous_point_angle,
-                                                         Angle.calculate_angle_between(previous_point, candidate_start,
-                                                                                       candidate_end), \
-                                                         next_point_angle,
-                                                         Angle.calculate_angle_between(candidate_start, candidate_end,
-                                                                                       next_point)))
+            print('result is {} ({}) and {} ({})'.format(
+                previous_point_angle, angle_between_prev_and_start, next_point_angle, angle_between_start_and_end)
+            )
 
-        if previous_point_angle < right_angle_detection_margin \
-                and next_point_angle < right_angle_detection_margin:
+        if previous_point_angle < right_angle_detection_margin and next_point_angle < right_angle_detection_margin:
             base_of_shape_line = (candidate_start_index, candidate_end_index)
             if DEBUG and DEBUG_FIND_BASE:
                 print("OK")
