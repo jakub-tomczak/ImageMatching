@@ -16,14 +16,10 @@ class Arm:
     def __init__(self, a, b):
         self.a = a
         self.b = b
-        self.length = Arm.pitagoras(a[1] - b[1], a[0] - b[0])
+        self.length = distance(a, b)
 
     def angle(self):
         return math.degrees(math.atan2(self.a[0] - self.b[0], self.a[1] - self.b[1]))
-
-    @staticmethod
-    def pitagoras(a, b):
-        return pow(a ** 2 + b ** 2, 0.5)
 
     def __repr__(self) -> str:
         return "Arm({} - {} [{}])".format(self.a, self.b, self.length)
@@ -200,7 +196,7 @@ def angles(img: Image):
     if coords_num > 1:
         for i in range(coords_num):
             p0, p1 = take_two_subseqent_points_indices(i, len(coords), True)
-            distances.append((calculate_distance_between_points(coords[p0], coords[p1]), i))
+            distances.append((distance(coords[p0], coords[p1]), i))
 
     distances.sort(key=lambda x: x[0], reverse=True)
     best_candidate_for_base = find_base_of_shape(coords, distances)
@@ -266,7 +262,3 @@ def get_ranking(dataset: Dataset):
             a2.comparisons[a1] = compare_res
 
     return [[r[0].image.name for r in a.ranking()] for a in ang]
-
-
-def calculate_distance_between_points(first_coords: (int, int), second_coords: (int, int)):
-    return Arm.pitagoras(abs(first_coords[0] - second_coords[0]), abs(first_coords[1] - second_coords[1]))
