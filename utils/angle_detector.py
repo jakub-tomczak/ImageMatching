@@ -1,14 +1,11 @@
-import math
-
-from matplotlib import pyplot as plt
 from skimage.measure import find_contours, approximate_polygon
 from skimage.transform import resize
 
 from utils.dataset_helper import Image, Dataset
-from utils.plotting_helper import plot_line
 from utils.debug_conf import *
-
+from utils.debug_helper import show_comparing_points, show_debug_info
 from utils.model import ImageAngleData, Angle
+from utils.mutators import compress_points
 from utils.points_helpers import distance, accumulate_points
 
 NO_SKIP_POSSIBLE = 3
@@ -41,7 +38,7 @@ class CompareResult:
                     b_i += bp + 1
                     values.append(sim)
                 if show:
-                    show_points(first.image.data, second.image.data, points, first_as_first)
+                    show_comparing_points(first.image.data, second.image.data, points, first_as_first)
                 different_offsets.append(sum(values) / max((shorter_len - 4), 1))  # -2 because of the base
         self.similarity = max(different_offsets)
 
@@ -181,54 +178,6 @@ def angles(img: Image):
         show_debug_info(ang, coords, image, distances, best_candidate_for_base)
 
     return ang
-
-
-def show_debug_info(ang: [Angle], coords, image, distances, best_candidate_for_base):
-    fig, ax = plt.subplots()
-    ax.imshow(image, interpolation='nearest', cmap=plt.cm.Greys_r)
-    angles_points = np.array([a.point for a in ang])
-    ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=3)
-    ax.plot(coords[0, 1], coords[0, 0], '*', color='blue')
-    ax.plot(coords[1, 1], coords[1, 0], '*', color='green')
-    ax.plot(coords[-2, 1], coords[-2, 0], 'o', color='orange')
-    ax.plot(angles_points[:, 1], angles_points[:, 0], 'o', color='green')
-
-    # draw a few longest distances
-    for i in range(1):
-        color = 'yellow'
-        if best_candidate_for_base is not None:
-            p_0_index, p_1_index = best_candidate_for_base
-        else:
-            color = 'blue'
-            if i >= len(distances):
-                break
-            p_0_index = distances[i][1]
-            p_1_index = (p_0_index + 1) % len(distances)
-
-        plot_line(ax, coords[p_0_index], coords[p_1_index], color)
-
-    print(ang)
-    plt.show()
-
-
-def show_points(img1, img2, points, first_as_first):
-    fig, (ax1, ax2) = plt.subplots(ncols=2)
-    ax1.imshow(img1, interpolation='nearest', cmap=plt.cm.Greys_r)
-    ax2.imshow(img2, interpolation='nearest', cmap=plt.cm.Greys_r)
-    for i, (f1, f2) in enumerate(points):
-        add_points(ax1, ax2, f1, f2, first_as_first, i)
-    plt.show()
-
-
-def add_points(ax1, ax2, p1, p2, is_first_first, index):
-    color = ('blue', 'green')
-    if index == 0:
-        color = ('red', 'red')
-    elif index == 1:
-        color = ('orange', 'orange')
-    pp1, pp2 = (p1.point, p2.point) if is_first_first else (p2.point, p1.point)
-    ax1.plot(pp1[1] / 4, pp1[0] / 4, '*', color=color[0])
-    ax2.plot(pp2[1] / 4, pp2[0] / 4, '*', color=color[1])
 
 
 def get_ranking(dataset: Dataset):
