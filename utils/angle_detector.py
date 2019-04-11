@@ -10,6 +10,7 @@ from utils.points_helpers import distance, accumulate_points
 
 NO_SKIP_POSSIBLE = 3
 ACCEPT_STRAIGHT_ANGLE_DIF = 10
+MIN_DISTANCE = 20
 
 
 class CompareResult:
@@ -65,6 +66,7 @@ def calculate_angle_for_point_at(points, it: int, points_number: int):
 
 
 def compute_angles(coords):
+    coords = compress_points(coords, MIN_DISTANCE)
     points_num = len(coords)
     valid_angles = []
     start = None
