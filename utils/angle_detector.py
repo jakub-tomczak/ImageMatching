@@ -7,6 +7,9 @@ from skimage.transform import resize
 from utils.dataset_helper import Image, Dataset
 from utils.plotting_helper import plot_line
 from utils.debug_conf import *
+import numpy as np
+
+from utils.points_helpers import distance, accumulate_points
 
 NO_SKIP_POSSIBLE = 3
 ACCEPT_STRAIGHT_ANGLE_DIF = 10
@@ -52,7 +55,7 @@ class Angle:
 class ImageAngleData:
     def __init__(self, image: Image, angles: list):
         self.image = image
-        self.angles = [a for a in angles if abs(180 - a.angle) > ACCEPT_STRAIGHT_ANGLE_DIF]
+        self.angles = angles
         self.possible_bases = [i for i in sorted(enumerate(self.angles), key=lambda x: x[1].armA.length, reverse=True)][
                               :2]
         self.comparisons = dict()
@@ -115,7 +118,29 @@ def calculate_angle_for_point_at(points, it: int, points_number: int):
 
 def compute_angles(coords):
     points_num = len(coords)
-    return [calculate_angle_for_point_at(coords, i, points_num) for i in range(points_num)]
+    valid_angles = []
+    start = None
+    points = []
+    for i in range(points_num):
+        a = calculate_angle_for_point_at(coords, i, points_num)
+        if start is not None:
+            points.append(a.point)
+            center = accumulate_points(points)
+            a = Angle(start, center, a.armB.b)
+        if abs(180 - a.angle) > ACCEPT_STRAIGHT_ANGLE_DIF:
+            start = None
+            points = []
+            valid_angles.append(a)
+        else:
+            if start is None:
+                start = a.armA.a
+                points.append(a.point)
+    if start is not None:
+        center = accumulate_points(points)
+        a = Angle(start, center, coords[0])
+        valid_angles.append(a)
+
+    return valid_angles
 
 
 # takes returns tuple (point, other_point)
@@ -207,13 +232,15 @@ def angles(img: Image):
     return ang
 
 
-def show_debug_info(ang, coords, image, distances, best_candidate_for_base):
+def show_debug_info(ang: [Angle], coords, image, distances, best_candidate_for_base):
     fig, ax = plt.subplots()
     ax.imshow(image, interpolation='nearest', cmap=plt.cm.Greys_r)
+    angles_points = np.array([a.point for a in ang])
     ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=3)
     ax.plot(coords[0, 1], coords[0, 0], '*', color='blue')
     ax.plot(coords[1, 1], coords[1, 0], '*', color='green')
     ax.plot(coords[-2, 1], coords[-2, 0], 'o', color='orange')
+    ax.plot(angles_points[:, 1], angles_points[:, 0], 'o', color='green')
 
     # draw a few longest distances
     for i in range(1):
