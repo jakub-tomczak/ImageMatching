@@ -9,7 +9,7 @@ from utils.mutators import compress_points
 from utils.points_helpers import distance, accumulate_points
 
 NO_SKIP_POSSIBLE = 3
-ACCEPT_STRAIGHT_ANGLE_DIF = 10
+ACCEPT_STRAIGHT_ANGLE_DIF = 15
 MIN_DISTANCE = 20
 
 
