@@ -9,9 +9,12 @@ class Arm:
         self.a = a
         self.b = b
         self.length = distance(a, b)
+        self._slope = None
 
-    def angle(self):
-        return math.degrees(math.atan2(self.a[0] - self.b[0], self.a[1] - self.b[1]))
+    def slope_angle(self):
+        if self._slope is None:
+            self._slope = math.degrees(math.atan2(self.a[0] - self.b[0], self.a[1] - self.b[1]))
+        return self._slope
 
     def __repr__(self) -> str:
         return "Arm({} - {} [{}])".format(self.a, self.b, self.length)
