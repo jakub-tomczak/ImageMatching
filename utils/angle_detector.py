@@ -9,8 +9,7 @@ from utils.mutators import compress_points
 from utils.points_helpers import distance, accumulate_points
 
 NO_SKIP_POSSIBLE = 3
-ACCEPT_STRAIGHT_ANGLE_DIF = 15
-MIN_DISTANCE = 20
+ACCEPT_STRAIGHT_ANGLE_DIF = 10
 
 
 class CompareResult:
@@ -177,10 +176,12 @@ def angles(img: Image):
     distances.sort(key=lambda x: x[0], reverse=True)
     best_candidate_for_base = find_base_of_shape(coords, distances)
 
+    best_bases = find_best_bases(ang)
+
     if DEBUG and DEBUG_DISPLAY_IMAGES:
         show_debug_info(ang, coords, image, distances, best_candidate_for_base)
 
-    return ang
+    return ang, best_bases
 
 
 def get_ranking(dataset: Dataset):
@@ -195,9 +196,8 @@ def get_ranking(dataset: Dataset):
 
 
 def prepare_image_data(img: Image):
-    ang = angles(img)
-    best_bases = find_best_bases(ang)
-    return ImageAngleData(img, ang, best_bases)
+    ang, bases = angles(img)
+    return ImageAngleData(img, ang, bases)
 
 
 def find_best_bases(angles: [Angle]):
