@@ -65,8 +65,8 @@ def calculate_angle_for_point_at(points, it: int, points_number: int):
     )
 
 
-def compute_angles(coords):
-    coords = compress_points(coords, MIN_DISTANCE)
+def compute_angles(coords, min_distance):
+    coords = compress_points(coords, min_distance)
     points_num = len(coords)
     valid_angles = []
     start = None
@@ -160,8 +160,9 @@ def angles(img: Image):
     image = resize(image, (image.shape[0] * 4, image.shape[1] * 4), anti_aliasing=True)
     con = find_contours(image, .8)
     contour = con[0]
-    coords = approximate_polygon(contour, tolerance=6)
-    ang = compute_angles(coords[:-1])
+    min_distance = (image.shape[0] + image.shape[1]) / 100
+    coords = approximate_polygon(contour, tolerance=min_distance / 2)
+    ang = compute_angles(coords[:-1], min_distance)
 
     # on 0th position we store distance between
     # 0th coord and 1st coord
