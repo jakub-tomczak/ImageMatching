@@ -83,7 +83,7 @@ def compute_angles(coords, min_distance):
         else:
             if start is None:
                 start = a.armA.a
-                points.append(a.point)
+            points.append(a.point)
     if start is not None:
         center = accumulate_points(points)
         a = Angle(start, center, coords[0])
