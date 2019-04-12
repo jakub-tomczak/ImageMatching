@@ -9,6 +9,7 @@ OKGREEN = '\033[92m'
 FAIL = '\033[91m'
 ENDC = '\033[0m'
 INFO = '\033[36m'
+POINTS_INFO = '\033[1;36m'
 
 
 def result(is_ok):
@@ -38,7 +39,8 @@ def print_debug_info(dataset: Dataset, ranking):
         ans = r[0]
         print("correct answer for image {} is {}; got {} {}".format(image.name, cor, ans, result(cor == ans)))
     points = calculate_points(ranking, dataset)
-    print("received points: {}".format(points))
+    total_points = len(dataset.images)
+    print("received points: {}{}/{} ({}%){}".format(POINTS_INFO, points, total_points, points / total_points*100, ENDC))
 
 
 def show_debug_info(ang: [Angle], arms: [Arm], coords, image, distances, best_candidate_for_base):
