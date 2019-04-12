@@ -1,15 +1,14 @@
 from skimage.measure import find_contours, approximate_polygon
 from skimage.transform import resize
-
+import numpy as np
 from utils.dataset_helper import Image, Dataset
 from utils.debug_conf import *
-from utils.debug_helper import show_comparing_points, show_debug_info
-from utils.model import ImageAngleData, Angle
+from utils.debug_helper import show_comparing_points, show_debug_info, draw_image_spec
+from utils.model import ImageAngleData, Angle, Arm
 from utils.mutators import compress_points
-from utils.points_helpers import distance, accumulate_points
+from utils.points_helpers import distance
 
 NO_SKIP_POSSIBLE = 3
-ACCEPT_STRAIGHT_ANGLE_DIF = 10
 
 
 class CompareResult:
@@ -56,40 +55,50 @@ class CompareResult:
         return NO_SKIP_POSSIBLE - 1, NO_SKIP_POSSIBLE - 1, 0
 
 
-def calculate_angle_for_point_at(points, it: int, points_number: int):
-    return Angle(
-        points[(it - 1) % points_number],
-        points[it],
-        points[(it + 1) % points_number]
-    )
-
-
-def compute_angles(coords, min_distance):
+def calculate_meaningful_points(coords: [[int, int]], min_distance: float):
     coords = compress_points(coords, min_distance)
-    points_num = len(coords)
-    valid_angles = []
-    start = None
-    points = []
-    for i in range(points_num):
-        a = calculate_angle_for_point_at(coords, i, points_num)
-        if start is not None:
-            points.append(a.point)
-            center = accumulate_points(points)
-            a = Angle(start, center, a.armB.b)
-        if abs(180 - a.angle) > ACCEPT_STRAIGHT_ANGLE_DIF:
-            start = None
-            points = []
-            valid_angles.append(a)
-        else:
-            if start is None:
-                start = a.armA.a
-            points.append(a.point)
-    if start is not None:
-        center = accumulate_points(points)
-        a = Angle(start, center, coords[0])
-        valid_angles.append(a)
+    arms = calculate_arms(coords)
+    arms = merge_half_full_arms(arms)
+    ang = calculate_angles_for_arms(arms)
+    return arms, ang
 
-    return valid_angles
+
+def calculate_angles_for_arms(arms: [Arm]):
+    last = arms[len(arms) - 1]
+    angles = []
+    for a in arms:
+        angles.append(Angle(last, a))
+        last = a
+    return angles
+
+
+def merge_half_full_arms(arms: [Arm]):
+    merged_arms = []
+    last = arms[len(arms) - 1]
+    was_added = False
+    for a in arms:
+        angle = Angle.for_points(last.a, a.a, a.b)
+        was_added = not angle.is_half_full()
+        if was_added:
+            merged_arms.append(last)
+            last = a
+        else:
+            last = Arm(last.a, a.b)
+    if not was_added:
+        if len(merged_arms) > 0:
+            previous_first = merged_arms.pop(0)
+            last = Arm(last.a, previous_first.b)
+        merged_arms.append(last)
+    return merged_arms
+
+
+def calculate_arms(coords: [[int, int]]):
+    arms = []
+    last_coord = coords[len(coords) - 1]
+    for c in coords:
+        arms.append(Arm(last_coord, c))
+        last_coord = c
+    return arms
 
 
 # takes returns tuple (point, other_point)
@@ -161,7 +170,7 @@ def angles(img: Image):
     contour = con[0]
     min_distance = (image.shape[0] + image.shape[1]) / 100
     coords = approximate_polygon(contour, tolerance=min_distance / 2)
-    ang = compute_angles(coords[:-1], min_distance)
+    arms, ang = calculate_meaningful_points(coords[:-1], min_distance)
 
     # on 0th position we store distance between
     # 0th coord and 1st coord
@@ -179,7 +188,7 @@ def angles(img: Image):
     best_bases = find_best_bases(ang)
 
     if DEBUG and DEBUG_DISPLAY_IMAGES:
-        show_debug_info(ang, coords, image, distances, best_candidate_for_base)
+        show_debug_info(ang, arms, coords, image, distances, best_candidate_for_base)
 
     return ang, best_bases
 
@@ -201,4 +210,17 @@ def prepare_image_data(img: Image):
 
 
 def find_best_bases(angles: [Angle]):
-    return [i for i in sorted(enumerate(angles), key=lambda x: x[1].armA.length, reverse=True)][:2]
+    return [i for i in sorted(enumerate(angles), key=lambda x: x[1].armA.length, reverse=True)][:3]
+
+
+if __name__ == '__main__':
+    coords = np.array([
+        [157, 5], [5, 5], [5, 13], [8, 100], [5, 140],
+        [5, 150], [100, 150], [150, 150], [150, 140], [150, 100], [150, 50]
+    ])
+    image = np.zeros((160, 160))
+    from matplotlib import pyplot as plt
+
+    arms, ang = calculate_meaningful_points(coords, 1)
+    draw_image_spec(image, ang,arms, coords)
+    plt.show()

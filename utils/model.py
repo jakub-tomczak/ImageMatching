@@ -3,6 +3,8 @@ import math
 from utils.dataset_helper import Image
 from utils.points_helpers import distance
 
+HALF_FULL_ANGLE_ACCEPT_THRESHOLD = 10
+
 
 class Arm:
     def __init__(self, a, b):
@@ -21,11 +23,18 @@ class Arm:
 
 
 class Angle:
-    def __init__(self, a, b, c) -> None:
-        self.armA = Arm(a, b)
-        self.armB = Arm(b, c)
-        self.angle = Angle.calculate_angle_between(a, b, c)
-        self.point = b
+    def __init__(self, a: Arm, b: Arm) -> None:
+        self.armA = a
+        self.armB = b
+        self.angle = Angle.calculate_angle_between(a.a, b.a, b.b)
+        self.point = b.a
+
+    def is_half_full(self):
+        return abs(180 - self.angle) <= HALF_FULL_ANGLE_ACCEPT_THRESHOLD
+
+    @staticmethod
+    def for_points(a, b, c):
+        return Angle(Arm(a, b), Arm(b, c))
 
     @staticmethod
     def calculate_angle_between(a, b, c):

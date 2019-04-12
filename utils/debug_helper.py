@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from utils.dataset_helper import Dataset
-from utils.model import Angle
+from utils.model import Angle, Arm
 from utils.plotting_helper import plot_line
 
 OKGREEN = '\033[92m'
@@ -40,15 +40,8 @@ def print_debug_info(dataset: Dataset, ranking):
     print("received points: {}".format(points))
 
 
-def show_debug_info(ang: [Angle], coords, image, distances, best_candidate_for_base):
-    fig, ax = plt.subplots()
-    ax.imshow(image, interpolation='nearest', cmap=plt.cm.Greys_r)
-    angles_points = np.array([a.point for a in ang])
-    ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=3)
-    ax.plot(coords[0, 1], coords[0, 0], '*', color='blue')
-    ax.plot(coords[1, 1], coords[1, 0], '*', color='green')
-    ax.plot(coords[-2, 1], coords[-2, 0], 'o', color='orange')
-    ax.plot(angles_points[:, 1], angles_points[:, 0], 'o', color='green')
+def show_debug_info(ang: [Angle], arms: [Arm], coords, image, distances, best_candidate_for_base):
+    ax = draw_image_spec(image, ang, arms, coords)
 
     # draw a few longest distances
     for i in range(1):
@@ -66,6 +59,21 @@ def show_debug_info(ang: [Angle], coords, image, distances, best_candidate_for_b
 
     print(ang)
     plt.show()
+
+
+def draw_image_spec(image, ang: [Angle], arms: [Arm], coords):
+    fig, ax = plt.subplots()
+    ax.imshow(image, interpolation='nearest', cmap=plt.cm.Greys_r)
+    angles_points = np.array([a.point for a in ang])
+    ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=5)
+    ax.plot(coords[0, 1], coords[0, 0], '*', color='blue')
+    ax.plot(coords[1, 1], coords[1, 0], '*', color='green')
+    ax.plot(coords[-2, 1], coords[-2, 0], 'o', color='orange')
+    ax.plot(angles_points[:, 1], angles_points[:, 0], 'o', color='green')
+    for a in arms:
+        c = np.array([a.a, a.b])
+        ax.plot(c[:, 1], c[:, 0], '-*', color='pink')
+    return ax
 
 
 def show_comparing_points(img1, img2, points, first_as_first):
