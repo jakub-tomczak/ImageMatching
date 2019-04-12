@@ -57,7 +57,7 @@ class Angle:
         return abs(1 - first_ratio / second_ratio) < 0.25
 
     def mirror_similarity(self, other, first_or_last=False):
-        target = 180 if first_or_last else 360
+        target = 540 if first_or_last else 360
         return 1 - abs((self.angle + other.angle) / target - 1)
 
 

@@ -71,10 +71,14 @@ def draw_image_spec(image, ang: [Angle], arms: [Arm], coords):
     return ax
 
 
-def show_comparing_points(img1, img2, points, first_as_first):
+def show_comparing_points(img1, f_angles, img2, s_angles, points, first_as_first):
     fig, (ax1, ax2) = plt.subplots(ncols=2)
     ax1.imshow(img1, interpolation='nearest', cmap=plt.cm.Greys_r)
     ax2.imshow(img2, interpolation='nearest', cmap=plt.cm.Greys_r)
+    angles_points = np.array([a.point for a in f_angles])
+    ax1.plot(angles_points[:, 1]/4, angles_points[:, 0]/4, 'o', color='yellow')
+    angles_points = np.array([a.point for a in s_angles])
+    ax2.plot(angles_points[:, 1]/4, angles_points[:, 0]/4, 'o', color='yellow')
     for i, (f1, f2) in enumerate(points):
         add_points(ax1, ax2, f1, f2, first_as_first, i)
     plt.show()

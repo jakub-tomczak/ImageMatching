@@ -21,8 +21,6 @@ class CompareResult:
                 shorter_len = len(shorter)
                 longer_len = len(longer)
                 show = False
-                if first.image.name == 3 and second.image.name == 4:
-                    show = True
                 a_i = 0
                 b_i = 0
                 values = []
@@ -34,27 +32,33 @@ class CompareResult:
                     b_i += bp + 1
                     values.append(sim)
                 if show:
-                    show_comparing_points(first.image.data, second.image.data, points, first_as_first)
-                different_offsets.append(sum(values) / max(shorter_len, 1))  # -2 because of the base
+                    show_comparing_points(first.image.data,f_angles, second.image.data, s_angles, points, first_as_first)
+                different_offsets.append(sum(values) / max(shorter_len, 1))
         self.similarity = max(different_offsets)
 
     @staticmethod
     def find_matching_angle(a: [Angle], b: [Angle], a_i: int, b_i: int):
         len_a = len(a)
         len_b = len(b)
+        a_first = a[a_i]
+        b_first = b[len_b - b_i - 1]
         for a_o in range(NO_SKIP_POSSIBLE):
             a_next_index = a_i + a_o
             if a_next_index >= len_a:
                 break
             a_angle = a[a_next_index]
+            if a_o > 0:
+                a_angle = Angle.for_points(a_first.armA.a, a_angle.armB.a, a_angle.armB.b)
             for b_o in range(NO_SKIP_POSSIBLE):
                 b_next_index = len_b - b_i - b_o - 1
                 if b_next_index < 0:
                     break
                 b_angle = b[b_next_index]
+                if b_o > 0:
+                    b_angle = Angle.for_points(b_angle.armA.a, b_angle.armA.b, b_first.armB.b)
                 first_or_last = (b_next_index == 0 or b_next_index == len_b - 1) and\
                                 (a_next_index == 0 or a_next_index == len_a - 1)
-                sim = a_angle.mirror_similarity(b_angle, first_or_last) if a_angle.can_match(b_angle) else 0
+                sim = a_angle.mirror_similarity(b_angle, first_or_last) if first_or_last or a_angle.can_match(b_angle) else 0
                 if sim > 0:
                     return a_o, b_o, sim
         return NO_SKIP_POSSIBLE - 1, NO_SKIP_POSSIBLE - 1, 0
