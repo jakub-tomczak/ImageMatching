@@ -22,6 +22,13 @@ class Arm:
         return "Arm({} - {} [{}])".format(self.a, self.b, self.length)
 
 
+class BaseArm:
+    def __init__(self, start: int, end: int, arm: Arm) -> None:
+        self.start = start
+        self.end = end
+        self.arm = arm
+
+
 class Angle:
     def __init__(self, a: Arm, b: Arm) -> None:
         self.armA = a
@@ -49,15 +56,15 @@ class Angle:
         second_ratio = self.armB.length / other.armA.length
         return abs(1 - first_ratio / second_ratio) < 0.25
 
-    def mirror_similarity(self, other):
-        return 1 - abs((self.angle + other.angle) / 360 - 1)
+    def mirror_similarity(self, other, first_or_last=False):
+        target = 180 if first_or_last else 360
+        return 1 - abs((self.angle + other.angle) / target - 1)
 
 
 class ImageAngleData:
-    def __init__(self, image: Image, angles: list, possible_bases: [Arm]):
+    def __init__(self, image: Image, comparison_angles: [[Angle]]):
         self.image = image
-        self.angles = angles
-        self.possible_bases = possible_bases
+        self.comparison_angles = comparison_angles
         self.comparisons = dict()
 
     def ranking(self):

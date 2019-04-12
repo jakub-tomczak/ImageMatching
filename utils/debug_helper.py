@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from utils.dataset_helper import Dataset
-from utils.model import Angle, Arm
+from utils.model import Angle, Arm, BaseArm
 from utils.plotting_helper import plot_line
 
 OKGREEN = '\033[92m'
@@ -40,25 +40,17 @@ def print_debug_info(dataset: Dataset, ranking):
         print("correct answer for image {} is {}; got {} {}".format(image.name, cor, ans, result(cor == ans)))
     points = calculate_points(ranking, dataset)
     total_points = len(dataset.images)
-    print("received points: {}{}/{} ({}%){}".format(POINTS_INFO, points, total_points, points / total_points*100, ENDC))
+    print("received points: {}{}/{} ({}%){}".format(
+        POINTS_INFO, points, total_points, points / total_points * 100, ENDC)
+    )
 
 
-def show_debug_info(ang: [Angle], arms: [Arm], coords, image, distances, best_candidate_for_base):
+def show_debug_info(ang: [Angle], arms: [Arm], coords, image, best_bases: [BaseArm]):
     ax = draw_image_spec(image, ang, arms, coords)
 
-    # draw a few longest distances
-    for i in range(1):
+    for a in best_bases:
         color = 'yellow'
-        if best_candidate_for_base is not None:
-            p_0_index, p_1_index = best_candidate_for_base
-        else:
-            color = 'blue'
-            if i >= len(distances):
-                break
-            p_0_index = distances[i][1]
-            p_1_index = (p_0_index + 1) % len(distances)
-
-        plot_line(ax, coords[p_0_index], coords[p_1_index], color)
+        plot_line(ax, a.arm.a, a.arm.b, color)
 
     print(ang)
     plt.show()
