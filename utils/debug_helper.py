@@ -8,6 +8,7 @@ from utils.plotting_helper import plot_line
 OKGREEN = '\033[92m'
 FAIL = '\033[91m'
 ENDC = '\033[0m'
+INFO = '\033[36m'
 
 
 def result(is_ok):

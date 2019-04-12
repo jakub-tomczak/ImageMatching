@@ -14,15 +14,15 @@ def parse_args():
     return args.path, int(args.number_of_images)
 
 
-def main():
-    path, number_of_images = parse_args()
+def run(path, number_of_images, debug=False):
     dataset = load_dataset(path, number_of_images)
     ranking = get_ranking(dataset)
     for r in ranking:
         print(" ".join(str(i) for i in r))
-    if DEBUG:
+    if debug:
         print_debug_info(dataset, ranking)
 
 
 if __name__ == "__main__":
-    main()
+    path, number_of_images = parse_args()
+    run(path, number_of_images, DEBUG)
