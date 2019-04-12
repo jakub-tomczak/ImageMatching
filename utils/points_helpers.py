@@ -14,3 +14,19 @@ def distance(a, b):
 
 def pitagoras(a, b):
     return pow(a ** 2 + b ** 2, 0.5)
+
+
+def take_two_subseqent_points_indices(point_index: int, number_of_points: int, is_other_next_point: bool) -> (int, int):
+    """
+    takes returns tuple (point, other_point)
+    other point is the next one if is_other_next_point
+    other point is the previous one if not is_other_next_point
+    :param point_index:
+    :param number_of_points:
+    :param is_other_next_point:
+    :return:
+    """
+    if is_other_next_point:
+        return point_index, (point_index + 1) % (number_of_points - 1)
+    else:
+        return (point_index - 1) % (number_of_points - 1), point_index
