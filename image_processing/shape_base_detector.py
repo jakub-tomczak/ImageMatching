@@ -1,6 +1,7 @@
+from utils.dataset_helper import Image
 from utils.debug_conf import *
-from utils.points_helpers import take_two_subseqent_points_indices
-from utils.angle_detector import Angle
+from utils.points_helpers import take_two_subseqent_points_indices, distance
+from utils.model import Angle
 
 
 def find_base_of_shape(coords: [[float, float]], distances: [[float, int]]) -> [int, int]:
@@ -52,3 +53,24 @@ def find_base_of_shape(coords: [[float, float]], distances: [[float, int]]) -> [
                 print("OK")
             break
     return base_of_shape_line
+
+
+def find_best_bases(angles: [Angle]):
+    return [i for i in sorted(enumerate(angles), key=lambda x: x[1].armA.length, reverse=True)][:2]
+
+
+def find_base(image: Image, ang: [float]):
+    # on 0th position we store distance between
+    # 0th coord and 1st coord
+    distances = []
+    coords_num = len(image.points_coords) - 1  # the last coord is equal to the first one so skip it
+    # calculated distances between points and append to a list
+    if coords_num > 1:
+        for i in range(coords_num):
+            p0, p1 = take_two_subseqent_points_indices(i, len(image.points_coords), True)
+            distances.append((distance(image.points_coords[p0], image.points_coords[p1]), i))
+
+    distances.sort(key=lambda x: x[0], reverse=True)
+    best_candidate_for_base = find_base_of_shape(image.points_coords, distances)
+
+    return find_best_bases(ang), distances

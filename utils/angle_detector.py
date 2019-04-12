@@ -1,7 +1,7 @@
 from skimage.measure import find_contours, approximate_polygon
 from skimage.transform import resize
 
-from image_processing.shape_base_detector import find_base_of_shape
+from image_processing.shape_base_detector import find_base
 from utils.dataset_helper import Image, Dataset
 from utils.debug_conf import *
 from utils.debug_helper import show_comparing_points, show_debug_info
@@ -101,28 +101,9 @@ def angles(img: Image):
     con = find_contours(image, .8)
     contour = con[0]
     min_distance = (image.shape[0] + image.shape[1]) / 100
-    coords = approximate_polygon(contour, tolerance=min_distance / 2)
-    ang = compute_angles(coords[:-1], min_distance)
-
-    # on 0th position we store distance between
-    # 0th coord and 1st coord
-    distances = []
-    coords_num = len(coords) - 1  # the last coord is equal to the first one so skip it
-    # calculated distances between points and append to a list
-    if coords_num > 1:
-        for i in range(coords_num):
-            p0, p1 = take_two_subseqent_points_indices(i, len(coords), True)
-            distances.append((distance(coords[p0], coords[p1]), i))
-
-    distances.sort(key=lambda x: x[0], reverse=True)
-    best_candidate_for_base = find_base_of_shape(coords, distances)
-
-    best_bases = find_best_bases(ang)
-
-    if DEBUG and DEBUG_DISPLAY_IMAGES:
-        show_debug_info(ang, coords, image, distances, best_candidate_for_base)
-
-    return ang, best_bases
+    img.points_coords = approximate_polygon(contour, tolerance=min_distance / 2)
+    ang = compute_angles(img.points_coords[:-1], min_distance)
+    return ang
 
 
 def get_ranking(dataset: Dataset):
@@ -137,9 +118,10 @@ def get_ranking(dataset: Dataset):
 
 
 def prepare_image_data(img: Image):
-    ang, bases = angles(img)
+    ang = angles(img)
+    bases, distances = find_base(img, ang)
+
+    if DEBUG and DEBUG_DISPLAY_IMAGES:
+        show_debug_info(ang, img.points_coords, img, distances, bases[0])
+
     return ImageAngleData(img, ang, bases)
-
-
-def find_best_bases(angles: [Angle]):
-    return [i for i in sorted(enumerate(angles), key=lambda x: x[1].armA.length, reverse=True)][:2]

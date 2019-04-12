@@ -14,6 +14,8 @@ class Image:
         # assumes that there may be more than one correct answer
         # which is less likely
         self.correct = []
+        self.points_coords = []
+        self.base_coords = ()
 
     def set_matching_images(self, matching):
         self.correct = [int(x) for x in matching.split(' ')]
