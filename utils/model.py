@@ -58,7 +58,7 @@ class Angle:
 
     def mirror_similarity(self, other, first_or_last=False):
         target = 540 if first_or_last else 360
-        return 1 - abs((self.angle + other.angle) / target - 1)
+        return 1 - pow(abs((self.angle + other.angle) / target - 1), .25)
 
 
 class ImageAngleData:
