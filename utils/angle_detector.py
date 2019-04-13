@@ -161,13 +161,13 @@ def prepare_image_data(img: Image):
 def find_best_bases(arms: [Arm]):
     max_search = min(3, int(len(arms) * 0.2))
 
-    def is_close_to_straight_angle(arm1: Arm, arm2: Arm):
+    def is_close_to_right_angle(arm1: Arm, arm2: Arm):
         ang = Angle.calculate_angle_between(arm1.a, arm2.a, arm2.b)
         return abs(270 - ang) < 20
 
     def search_further(start: int, i: int, current: Arm):
         next_arm = arms[i % total]
-        if is_close_to_straight_angle(current, next_arm):
+        if is_close_to_right_angle(current, next_arm):
             return i, current
         elif abs(start - i) < max_search and current.length > 0 and next_arm.length / current.length < 0.2:
             return search_further(start, i + 1, Arm(current.a, next_arm.b))
@@ -175,7 +175,7 @@ def find_best_bases(arms: [Arm]):
 
     def search_previous(start: int, i: int, current: Arm):
         previous_arm = arms[i % total]
-        if is_close_to_straight_angle(previous_arm, current):
+        if is_close_to_right_angle(previous_arm, current):
             return i, current
         elif abs(start - i) < max_search and previous_arm.length / current.length < 0.2:
             return search_further(start, i - 1, Arm(previous_arm.a, current.b))
