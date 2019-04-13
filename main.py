@@ -17,8 +17,9 @@ def parse_args():
 def run(path, number_of_images, debug=False):
     dataset = load_dataset(path, number_of_images)
     ranking = get_ranking(dataset)
-    for r in ranking:
-        print(" ".join(str(i) for i in r))
+    if debug:
+        for r in ranking:
+            print(" ".join(str(i) for i in r))
     if debug:
         print_debug_info(dataset, ranking)
 
