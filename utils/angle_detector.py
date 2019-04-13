@@ -34,7 +34,8 @@ class CompareResult:
                     b_i += bp + 1
                     values.append(sim)
                 if show:
-                    show_comparing_points(first.image.data,f_angles, second.image.data, s_angles, points, first_as_first)
+                    show_comparing_points(first.image.data, f_angles, second.image.data, s_angles, points,
+                                          first_as_first)
                 different_offsets.append(sum(values) / max(shorter_len, 1))
         self.similarity = max(different_offsets)
 
@@ -58,9 +59,10 @@ class CompareResult:
                 b_angle = b[b_next_index]
                 if b_o > 0:
                     b_angle = Angle.for_points(b_angle.armA.a, b_angle.armA.b, b_first.armB.b)
-                first_or_last = (b_next_index == 0 or b_next_index == len_b - 1) and\
+                first_or_last = (b_next_index == 0 or b_next_index == len_b - 1) and \
                                 (a_next_index == 0 or a_next_index == len_a - 1)
-                sim = a_angle.mirror_similarity(b_angle, first_or_last) if first_or_last or a_angle.can_match(b_angle) else 0
+                sim = a_angle.mirror_similarity(b_angle, first_or_last) if first_or_last or a_angle.can_match(
+                    b_angle) else 0
                 if sim > 0:
                     return a_o, b_o, sim
         return NO_SKIP_POSSIBLE - 1, NO_SKIP_POSSIBLE - 1, 0
