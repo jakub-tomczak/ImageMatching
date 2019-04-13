@@ -1,5 +1,6 @@
 import skimage.io as io
 from os.path import join, isfile
+from utils.debug_conf import *
 
 dataset_directory = 'data'
 extension = 'png'
@@ -41,7 +42,8 @@ def load_image(dataset, image_name):
 
 
 def load_image(path):
-    print('loading image: {}'.format(path))
+    if DEBUG:
+        print('loading image: {}'.format(path))
     return io.imread(path, as_gray=True)
 
 

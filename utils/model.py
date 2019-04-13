@@ -3,6 +3,8 @@ import math
 from utils.dataset_helper import Image
 from utils.points_helpers import distance
 
+HALF_FULL_ANGLE_ACCEPT_THRESHOLD = 10
+
 
 class Arm:
     def __init__(self, a, b):
@@ -20,12 +22,26 @@ class Arm:
         return "Arm({} - {} [{}])".format(self.a, self.b, self.length)
 
 
+class BaseArm:
+    def __init__(self, start: int, end: int, arm: Arm) -> None:
+        self.start = start
+        self.end = end
+        self.arm = arm
+
+
 class Angle:
-    def __init__(self, a, b, c) -> None:
-        self.armA = Arm(a, b)
-        self.armB = Arm(b, c)
-        self.angle = Angle.calculate_angle_between(a, b, c)
-        self.point = b
+    def __init__(self, a: Arm, b: Arm) -> None:
+        self.armA = a
+        self.armB = b
+        self.angle = Angle.calculate_angle_between(a.a, b.a, b.b)
+        self.point = b.a
+
+    def is_half_full(self):
+        return abs(180 - self.angle) <= HALF_FULL_ANGLE_ACCEPT_THRESHOLD
+
+    @staticmethod
+    def for_points(a, b, c):
+        return Angle(Arm(a, b), Arm(b, c))
 
     @staticmethod
     def calculate_angle_between(a, b, c):
@@ -40,15 +56,15 @@ class Angle:
         second_ratio = self.armB.length / other.armA.length
         return abs(1 - first_ratio / second_ratio) < 0.25
 
-    def mirror_similarity(self, other):
-        return 1 - abs((self.angle + other.angle) / 360 - 1)
+    def mirror_similarity(self, other, first_or_last=False):
+        target = 540 if first_or_last else 360
+        return 1 - pow(abs((self.angle + other.angle) / target - 1), .25)
 
 
 class ImageAngleData:
-    def __init__(self, image: Image, angles: list, possible_bases: [Arm]):
+    def __init__(self, image: Image, comparison_angles: [[Angle]]):
         self.image = image
-        self.angles = angles
-        self.possible_bases = possible_bases
+        self.comparison_angles = comparison_angles
         self.comparisons = dict()
 
     def ranking(self):

@@ -2,12 +2,14 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from utils.dataset_helper import Dataset
-from utils.model import Angle
+from utils.model import Angle, Arm, BaseArm
 from utils.plotting_helper import plot_line
 
 OKGREEN = '\033[92m'
 FAIL = '\033[91m'
 ENDC = '\033[0m'
+INFO = '\033[36m'
+POINTS_INFO = '\033[1;36m'
 
 
 def result(is_ok):
@@ -37,41 +39,46 @@ def print_debug_info(dataset: Dataset, ranking):
         ans = r[0]
         print("correct answer for image {} is {}; got {} {}".format(image.name, cor, ans, result(cor == ans)))
     points = calculate_points(ranking, dataset)
-    print("received points: {}".format(points))
+    total_points = len(dataset.images)
+    print("received points: {}{}/{} ({}%){}".format(
+        POINTS_INFO, points, total_points, points / total_points * 100, ENDC)
+    )
 
 
-def show_debug_info(ang: [Angle], coords, image, distances, best_candidate_for_base):
-    fig, ax = plt.subplots()
-    ax.imshow(image, interpolation='nearest', cmap=plt.cm.Greys_r)
-    angles_points = np.array([a.point for a in ang])
-    ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=3)
-    ax.plot(coords[0, 1], coords[0, 0], '*', color='blue')
-    ax.plot(coords[1, 1], coords[1, 0], '*', color='green')
-    ax.plot(coords[-2, 1], coords[-2, 0], 'o', color='orange')
-    ax.plot(angles_points[:, 1], angles_points[:, 0], 'o', color='green')
+def show_debug_info(ang: [Angle], arms: [Arm], coords, image, best_bases: [BaseArm]):
+    ax = draw_image_spec(image, ang, arms, coords)
 
-    # draw a few longest distances
-    for i in range(1):
+    for a in best_bases:
         color = 'yellow'
-        if best_candidate_for_base is not None:
-            p_0_index, p_1_index = best_candidate_for_base
-        else:
-            color = 'blue'
-            if i >= len(distances):
-                break
-            p_0_index = distances[i][1]
-            p_1_index = (p_0_index + 1) % len(distances)
-
-        plot_line(ax, coords[p_0_index], coords[p_1_index], color)
+        plot_line(ax, a.arm.a, a.arm.b, color)
 
     print(ang)
     plt.show()
 
 
-def show_comparing_points(img1, img2, points, first_as_first):
+def draw_image_spec(image, ang: [Angle], arms: [Arm], coords):
+    fig, ax = plt.subplots()
+    ax.imshow(image, interpolation='nearest', cmap=plt.cm.Greys_r)
+    angles_points = np.array([a.point for a in ang])
+    ax.plot(coords[:, 1], coords[:, 0], '-r', linewidth=5)
+    ax.plot(coords[0, 1], coords[0, 0], '*', color='blue')
+    ax.plot(coords[1, 1], coords[1, 0], '*', color='green')
+    ax.plot(coords[-2, 1], coords[-2, 0], 'o', color='orange')
+    ax.plot(angles_points[:, 1], angles_points[:, 0], 'o', color='green')
+    for a in arms:
+        c = np.array([a.a, a.b])
+        ax.plot(c[:, 1], c[:, 0], '-*', color='pink')
+    return ax
+
+
+def show_comparing_points(img1, f_angles, img2, s_angles, points, first_as_first):
     fig, (ax1, ax2) = plt.subplots(ncols=2)
     ax1.imshow(img1, interpolation='nearest', cmap=plt.cm.Greys_r)
     ax2.imshow(img2, interpolation='nearest', cmap=plt.cm.Greys_r)
+    angles_points = np.array([a.point for a in f_angles])
+    ax1.plot(angles_points[:, 1]/4, angles_points[:, 0]/4, 'o', color='yellow')
+    angles_points = np.array([a.point for a in s_angles])
+    ax2.plot(angles_points[:, 1]/4, angles_points[:, 0]/4, 'o', color='yellow')
     for i, (f1, f2) in enumerate(points):
         add_points(ax1, ax2, f1, f2, first_as_first, i)
     plt.show()
