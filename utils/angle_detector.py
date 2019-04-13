@@ -123,6 +123,7 @@ def angles(img: Image):
     contour = con[0]
     min_distance = (image.shape[0] + image.shape[1]) / 100
     coords = approximate_polygon(contour, tolerance=min_distance / 2)
+    image.points_coords = coords
     arms, ang = calculate_meaningful_points(coords[:-1], min_distance)
 
     arms_bases = find_best_bases(arms)
