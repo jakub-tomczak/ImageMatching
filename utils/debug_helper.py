@@ -85,14 +85,15 @@ def show_comparing_points(img1, f_angles, img2, s_angles, points, first_as_first
 
 
 def add_points(ax1, ax2, p1, p2, is_first_first, index):
-    color = ('blue', 'green')
+    colors = ['#FF5722', '#FFC107', '#9C27B0', '#E91E63', '#607D8B', '#03A9F4', '#FF9800']
     if index == 0:
-        color = ('red', 'red')
-    elif index == 1:
-        color = ('orange', 'orange')
-    pp1, pp2 = (p1.point, p2.point) if is_first_first else (p2.point, p1.point)
-    ax1.plot(pp1[1] / 4, pp1[0] / 4, '*', color=color[0])
-    ax2.plot(pp2[1] / 4, pp2[0] / 4, '*', color=color[1])
+        color = ('#0D47A1', '#880E4F')
+    else:
+        c = colors[index % len(colors)]
+        color = (c, c)
+    pp1, pp2 = (p1.angle.point, p2.angle.point) if is_first_first else (p2.angle.point, p1.angle.point)
+    ax1.plot(pp1[1], pp1[0], '*', color=color[0])
+    ax2.plot(pp2[1], pp2[0], '*', color=color[1])
 
 
 def show_angle_on_image(image, angle: Angle):
