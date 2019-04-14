@@ -93,3 +93,14 @@ def add_points(ax1, ax2, p1, p2, is_first_first, index):
     pp1, pp2 = (p1.point, p2.point) if is_first_first else (p2.point, p1.point)
     ax1.plot(pp1[1] / 4, pp1[0] / 4, '*', color=color[0])
     ax2.plot(pp2[1] / 4, pp2[0] / 4, '*', color=color[1])
+
+
+def show_angle_on_image(image, angle: Angle):
+    fig, ax = plt.subplots()
+    ax.imshow(image, interpolation='nearest', cmap=plt.cm.Greys_r)
+    angles_points = np.array([angle.armA.a, angle.armB.a, angle.armB.b])
+    ax.plot(angles_points[:, 1], angles_points[:, 0], '-r', linewidth=5)
+    ax.plot(angle.armA.a[1], angle.armA.a[0], '*', color='blue')
+    ax.plot(angle.armB.a[1], angle.armB.a[0], '*', color='green')
+    ax.plot(angle.armB.b[1], angle.armB.b[0], '*', color='orange')
+    plt.show()
