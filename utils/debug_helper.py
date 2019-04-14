@@ -53,8 +53,6 @@ def show_debug_info(ang: [Angle], arms: [Arm], coords, image, best_bases: [BaseA
     for a in best_bases:
         color = 'yellow'
         plot_line(ax, a.arm.a, a.arm.b, color)
-
-    print(ang)
     plt.show()
 
 

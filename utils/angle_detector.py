@@ -111,8 +111,6 @@ def calculate_arms(coords: [[int, int]]):
 
 
 def angles(img: Image):
-    if DEBUG:
-        print("{}image_{}{}".format('\n' * 2, img.name, '-' * 20))
     image = img.data
     image = resize(image, (image.shape[0] * 4, image.shape[1] * 4), anti_aliasing=True)
     con = find_contours(image, .8)
