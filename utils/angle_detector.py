@@ -174,7 +174,7 @@ def find_best_bases(arms: [Arm]):
         if is_close_to_straight_angle(previous_arm, current):
             return i, current
         elif abs(start - i) < max_search and previous_arm.length / current.length < 0.2:
-            return search_further(start, i - 1, Arm(previous_arm.a, current.b))
+            return search_previous(start, i - 1, Arm(previous_arm.a, current.b))
         return i, None
 
     candidates = [i for i in sorted(enumerate(arms), key=lambda x: x[1].length, reverse=True)][:4]
