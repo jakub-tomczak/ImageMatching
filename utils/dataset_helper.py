@@ -22,7 +22,8 @@ class Image:
 
 class Dataset:
     def __init__(self, directory, number_of_images):
-        print('Loading dataset from: {}, images to load: {}'.format(directory, number_of_images))
+        if DEBUG and DEBUG_LOADING_IMAGES:
+            print('Loading dataset from: {}, images to load: {}'.format(directory, number_of_images))
         self.directory = directory
         self.number_of_images = number_of_images
         self.images_to_load = [join(directory, '{}.{}'.format(x, extension)) for x in range(number_of_images)]
@@ -40,7 +41,7 @@ def load_image(dataset, image_name):
 
 
 def load_image(path):
-    if DEBUG:
+    if DEBUG and DEBUG_LOADING_IMAGES:
         print('loading image: {}'.format(path))
     return io.imread(path, as_gray=True)
 

@@ -9,4 +9,4 @@ if __name__ == '__main__':
         if images == 0:
             continue
         print("TESTING " + INFO + dirname + ENDC)
-        run(dirname, images, True)
+        run(dirname, images, True, False)

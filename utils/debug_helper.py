@@ -1,14 +1,14 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from utils.dataset_helper import Dataset
+from utils.dataset_helper import Dataset, RESULT_DISPLAY_CORRECT, RESULT_DISPLAY_POINTS
 from utils.model import Angle, Arm, BaseArm
 from utils.plotting_helper import plot_line
 
 OKGREEN = '\033[92m'
 FAIL = '\033[91m'
 ENDC = '\033[0m'
-INFO = '\033[36m'
+INFO = '\033[35m'
 POINTS_INFO = '\033[1;36m'
 
 
@@ -37,12 +37,14 @@ def print_debug_info(dataset: Dataset, ranking):
     for image, r in zip(dataset.images, ranking):
         cor = image.correct[0]
         ans = r[0]
-        print("correct answer for image {} is {}; got {} {}".format(image.name, cor, ans, result(cor == ans)))
-    points = calculate_points(ranking, dataset)
-    total_points = len(dataset.images)
-    print("received points: {}{}/{} ({}%){}".format(
-        POINTS_INFO, points, total_points, points / total_points * 100, ENDC)
-    )
+        if RESULT_DISPLAY_CORRECT:
+            print("correct answer for image {} is {}; got {} {}".format(image.name, cor, ans, result(cor == ans)))
+    if RESULT_DISPLAY_POINTS:
+        points = calculate_points(ranking, dataset)
+        total_points = len(dataset.images)
+        print("received points: {}{}/{} ({}%){}".format(
+            POINTS_INFO, points, total_points, points / total_points * 100, ENDC)
+        )
 
 
 def show_debug_info(ang: [Angle], arms: [Arm], coords, image, best_bases: [BaseArm]):
