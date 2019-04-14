@@ -114,7 +114,7 @@ def angles(img: Image):
     image = img.data
     image = resize(image, (image.shape[0] * 4, image.shape[1] * 4), anti_aliasing=True)
     con = find_contours(image, .8)
-    contour = con[0]
+    contour = max(con, key=lambda x: len(x))
     min_distance = (image.shape[0] + image.shape[1]) / 100
     coords = approximate_polygon(contour, tolerance=min_distance / 2)
     arms, ang = calculate_meaningful_points(coords[:-1], min_distance)
