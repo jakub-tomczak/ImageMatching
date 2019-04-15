@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def accumulate_points(points):
     x_sum = 0
     y_sum = 0
@@ -32,18 +35,6 @@ def take_two_subseqent_points_indices(point_index: int, number_of_points: int, i
         return (point_index - 1) % (number_of_points - 1), point_index
 
 
-def get_normal_vector(start_point, end_point, length: float = 1.0):
-    """
-    :param start_point: Tuple or list (y, x)
-    :param end_point: Tuple or list (y, x)
-    :param length: Optional length of the returning vector.
-    :return: Normal vector (length 1) as Tuple (y, x)
-    """
-    x_0 = abs(start_point[1] - end_point[1])
-    y_0 = abs(start_point[0] - end_point[0])
-
-    coeff = y_0 / x_0
-    y = pow((1.0 / (coeff ** 2 + 1)), .5) * length
-    x = -coeff * y
-
-    return y, x
+def get_orthogonal_vector(vector: [int, int], length: int = 1):
+    b = np.array([-vector[1], vector[0]])
+    return length * (b / pow(b[0] ** 2 + b[1] ** 2, .5))
