@@ -114,14 +114,18 @@ def calculate_arms(coords: [[int, int]]):
     return arms
 
 
-def angles(img: Image, resize_image: bool = True):
+def get_contours(img: Image, resize_image: bool, level: float = .8, resize_factor: float = 4):
     if resize_image:
-        img.data = resize(img.data, (img.data.shape[0] * 4, img.data.shape[1] * 4), anti_aliasing=True)
-    con = find_contours(img.data, .8)
+        img.data = \
+            resize(img.data, (img.data.shape[0] * resize_factor, img.data.shape[1] * resize_factor), anti_aliasing=True)
+    con = find_contours(img.data, level=level)
     contour = max(con, key=lambda x: len(x))
     min_distance = (img.data.shape[0] + img.data.shape[1]) / 100
-    coords = approximate_polygon(contour, tolerance=min_distance / 2)
-    img.points_coords = coords[:-1]
+    return approximate_polygon(contour, tolerance=min_distance / 2), min_distance
+
+
+def angles(img: Image, resize_image: bool = True):
+    coords, min_distance = get_contours(img, resize_image)
     arms, ang = calculate_meaningful_points(coords[:-1], min_distance)
 
     arms_bases = find_best_bases(arms)
