@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from utils.dataset_helper import Dataset, RESULT_DISPLAY_CORRECT, RESULT_DISPLAY_POINTS
-from utils.model import Angle, Arm, BaseArm
+from utils.model import Angle, Arm, BaseArm, ComparePoint
 from utils.plotting_helper import plot_line
 
 OKGREEN = '\033[92m'
@@ -71,14 +71,15 @@ def draw_image_spec(image, ang: [Angle], arms: [Arm], coords):
     return ax
 
 
-def show_comparing_points(img1, f_angles, img2, s_angles, points, first_as_first):
+def show_comparing_points(img1, f_angles: [ComparePoint], img2, s_angles: [ComparePoint], points: [ComparePoint],
+                          first_as_first):
     fig, (ax1, ax2) = plt.subplots(ncols=2)
     ax1.imshow(img1, interpolation='nearest', cmap=plt.cm.Greys_r)
     ax2.imshow(img2, interpolation='nearest', cmap=plt.cm.Greys_r)
-    angles_points = np.array([a.point for a in f_angles])
-    ax1.plot(angles_points[:, 1]/4, angles_points[:, 0]/4, 'o', color='yellow')
-    angles_points = np.array([a.point for a in s_angles])
-    ax2.plot(angles_points[:, 1]/4, angles_points[:, 0]/4, 'o', color='yellow')
+    angles_points = np.array([a.angle.point for a in f_angles])
+    ax1.plot(angles_points[:, 1], angles_points[:, 0], 'o', color='#9E9E9E', markersize=10)
+    angles_points = np.array([a.angle.point for a in s_angles])
+    ax2.plot(angles_points[:, 1], angles_points[:, 0], 'o', color='#9E9E9E', markersize=10)
     for i, (f1, f2) in enumerate(points):
         add_points(ax1, ax2, f1, f2, first_as_first, i)
     plt.show()

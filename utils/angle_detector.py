@@ -1,20 +1,19 @@
 from skimage.measure import find_contours, approximate_polygon
-from skimage.transform import resize
+from utils.debug_helper import  show_angle_on_image
 import numpy as np
 from utils.dataset_helper import Image, Dataset
 from utils.debug_conf import *
 from utils.debug_helper import show_comparing_points, show_debug_info, draw_image_spec
-from utils.model import ImageAngleData, Angle, Arm, BaseArm
+from utils.model import ImageAngleData, Angle, Arm, BaseArm, ComparePoint, ExtremeComparePoint, SerialComparePoint
 from utils.mutators import compress_points
-
-NO_SKIP_POSSIBLE = 3
+from utils.points_helpers import distance
 
 
 class CompareResult:
     def __init__(self, first: ImageAngleData, second: ImageAngleData):
         different_offsets = []
-        for f_angles in first.comparison_angles:
-            for s_angles in second.comparison_angles:
+        for f_angles in first.comparison_points:
+            for s_angles in second.comparison_points:
                 shorter, longer, first_as_first = (f_angles, s_angles, True) \
                     if len(f_angles) < len(s_angles) \
                     else (s_angles, f_angles, False)
@@ -22,46 +21,42 @@ class CompareResult:
                 longer_len = len(longer)
                 show = False
                 a_i = 0
-                b_i = 0
-                values = []
+                b_i = longer_len - 1
+                total_sim = 0
                 points = []
-                while a_i < shorter_len and b_i < longer_len:
+                while a_i < shorter_len and b_i >= 0:
                     ap, bp, sim = CompareResult.find_matching_angle(shorter, longer, a_i, b_i)
-                    points.append((shorter[min(a_i + ap, shorter_len - 1)], longer[max(longer_len - 1 - b_i - bp, 0)]))
+                    if show and sim > 0:
+                        points.append(
+                            (shorter[min(a_i + ap, shorter_len - 1)], longer[max(b_i - bp, 0)]))
                     a_i += ap + 1
-                    b_i += bp + 1
-                    values.append(sim)
+                    b_i -= bp + 1
+                    total_sim += sim
+
                 if show:
-                    show_comparing_points(first.image.data,f_angles, second.image.data, s_angles, points, first_as_first)
-                different_offsets.append(sum(values) / max(shorter_len, 1))
+                    show_comparing_points(first.image.data, f_angles, second.image.data, s_angles, points,
+                                          first_as_first)
+                different_offsets.append(total_sim / max(shorter_len, 1))
         self.similarity = max(different_offsets)
 
     @staticmethod
-    def find_matching_angle(a: [Angle], b: [Angle], a_i: int, b_i: int):
-        len_a = len(a)
-        len_b = len(b)
-        a_first = a[a_i]
-        b_first = b[len_b - b_i - 1]
-        for a_o in range(NO_SKIP_POSSIBLE):
-            a_next_index = a_i + a_o
-            if a_next_index >= len_a:
-                break
-            a_angle = a[a_next_index]
-            if a_o > 0:
-                a_angle = Angle.for_points(a_first.armA.a, a_angle.armB.a, a_angle.armB.b)
-            for b_o in range(NO_SKIP_POSSIBLE):
-                b_next_index = len_b - b_i - b_o - 1
-                if b_next_index < 0:
-                    break
-                b_angle = b[b_next_index]
-                if b_o > 0:
-                    b_angle = Angle.for_points(b_angle.armA.a, b_angle.armA.b, b_first.armB.b)
-                first_or_last = (b_next_index == 0 or b_next_index == len_b - 1) and\
-                                (a_next_index == 0 or a_next_index == len_a - 1)
-                sim = a_angle.mirror_similarity(b_angle, first_or_last) if first_or_last or a_angle.can_match(b_angle) else 0
-                if sim > 0:
-                    return a_o, b_o, sim
-        return NO_SKIP_POSSIBLE - 1, NO_SKIP_POSSIBLE - 1, 0
+    def find_matching_angle(a: [ComparePoint], b: [ComparePoint], a_i: int, b_i: int):
+        a_point: ComparePoint = a[a_i]
+        b_point: ComparePoint = b[b_i]
+        if a_point.can_compare_with(b_point):
+            return a_point.similarity(b_point)
+        else:
+            if b_i > 0:
+                b_point2 = b[b_i - 1]
+                if a_point.can_compare_with(b_point2):
+                    a0, b0, sim = a_point.similarity(b_point2)
+                    return a0, b0 + 1, sim
+            if a_i < len(a) - 1:
+                a_point2 = a[a_i + 1]
+                if a_point2.can_compare_with(b_point):
+                    a0, b0, sim = a_point2.similarity(b_point)
+                    return a0 + 1, b0, sim
+        return 0, 0, 0
 
 
 def calculate_meaningful_points(coords: [[int, int]], min_distance: float):
@@ -112,12 +107,13 @@ def calculate_arms(coords: [[int, int]]):
 
 def angles(img: Image):
     image = img.data
-    image = resize(image, (image.shape[0] * 4, image.shape[1] * 4), anti_aliasing=True)
+    # image = resize(image, (image.shape[0] * 4, image.shape[1] * 4), anti_aliasing=True)
+    # img.data = image
     con = find_contours(image, .8)
     contour = max(con, key=lambda x: len(x))
     min_distance = (image.shape[0] + image.shape[1]) / 100
-    coords = approximate_polygon(contour, tolerance=min_distance / 2)
-    arms, ang = calculate_meaningful_points(coords[:-1], min_distance)
+    coords = approximate_polygon(contour, tolerance=min_distance/0.75)
+    arms, ang = calculate_meaningful_points(coords[:-1], min_distance * 3)
 
     arms_bases = find_best_bases(arms)
 
@@ -142,14 +138,46 @@ def prepare_image_data(img: Image):
     ang, bases = angles(img)
     angles_count = len(ang)
     comparison_angles = []
+    max_angles_dist = (img.data.shape[0] + img.data.shape[1]) / 40
     for b in bases:
         eng_angle_i = (b.end + 2) % angles_count
         if b.start < eng_angle_i:
             new_ang = ang[eng_angle_i:] + ang[:b.start]
         else:
             new_ang = ang[eng_angle_i:b.start]
-        comparison_angles.append(new_ang)
+        first = ExtremeComparePoint(new_ang[0])
+        last_point_num = len(new_ang) - 1
+        last = ExtremeComparePoint(new_ang[last_point_num])
+        serials = [first]
+        for i, a in enumerate(new_ang):
+            if i == 0 or i == last_point_num:
+                continue
+            bef, aft = neighbours(a, i, new_ang, max_angles_dist)
+            location_angle = Angle.for_points(first.angle.point, a.point, last.angle.point)
+            serials.append(SerialComparePoint(a, location_angle, bef, aft))
+        serials.append(last)
+        comparison_angles.append(serials)
     return ImageAngleData(img, comparison_angles)
+
+
+def neighbours(ang: Angle, index: int, all: [Angle], max_distance: float):
+    before = []
+    after = []
+    for i in range(index - 1, 0, -1):
+        bef = all[i]
+        dist = distance(ang.point, bef.point)
+        if dist <= max_distance or len(before) < 1:
+            before.append(bef)
+        else:
+            break
+    for i in range(index + 1, len(all) - 1):
+        aft = all[i]
+        dist = distance(ang.point, aft.point)
+        if dist <= max_distance or len(after) < 1:
+            after.append(aft)
+        else:
+            break
+    return before, after
 
 
 def find_best_bases(arms: [Arm]):
