@@ -9,6 +9,6 @@ def plot_line(ax, coord_1, coord_2, line_color):
 
 def interpolate_between_points(coord1: [float, float], coord2: [float, float], number_of_points: int) -> (
         [float], [float]):
-    xx = np.linspace(min(coord1[1], coord2[1]), max(coord1[1], coord2[1]), number_of_points)
-    yy = np.linspace(min(coord1[0], coord2[0]), max(coord1[0], coord2[0]), number_of_points)
+    xx = np.linspace(coord1[1], coord2[1], number_of_points)
+    yy = np.linspace(coord1[0], coord2[0], number_of_points)
     return xx, yy
