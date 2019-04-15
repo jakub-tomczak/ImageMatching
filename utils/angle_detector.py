@@ -127,6 +127,7 @@ def angles(img: Image):
     arms, ang = calculate_meaningful_points(coords[:-1], min_distance)
 
     arms_bases = find_best_bases(arms)
+    img.arms = arms
 
     if DEBUG and DEBUG_DISPLAY_IMAGES:
         show_debug_info(ang, arms, coords, image, arms_bases)

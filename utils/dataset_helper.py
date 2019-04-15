@@ -17,6 +17,7 @@ class Image:
         self.correct = []
         self.points_coords = []
         self.base_coords = ()
+        self.arms = []
 
     def set_matching_images(self, matching):
         self.correct = [int(x) for x in matching.split(' ')]
