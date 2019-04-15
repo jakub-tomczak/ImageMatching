@@ -115,12 +115,10 @@ def calculate_arms(coords: [[int, int]]):
 
 
 def angles(img: Image, resize_image: bool = True):
-    if DEBUG:
-        print("{}image_{}{}".format('\n' * 2, img.name, '-' * 20))
     if resize_image:
         img.data = resize(img.data, (img.data.shape[0] * 4, img.data.shape[1] * 4), anti_aliasing=True)
     con = find_contours(img.data, .8)
-    contour = con[0]
+    contour = max(con, key=lambda x: len(x))
     min_distance = (img.data.shape[0] + img.data.shape[1]) / 100
     coords = approximate_polygon(contour, tolerance=min_distance / 2)
     img.points_coords = coords[:-1]
@@ -180,7 +178,7 @@ def find_best_bases(arms: [Arm]):
         if is_close_to_right_angle(previous_arm, current):
             return i, current
         elif abs(start - i) < max_search and previous_arm.length / current.length < 0.2:
-            return search_further(start, i - 1, Arm(previous_arm.a, current.b))
+            return search_previous(start, i - 1, Arm(previous_arm.a, current.b))
         return i, None
 
     candidates = [i for i in sorted(enumerate(arms), key=lambda x: x[1].length, reverse=True)][:4]

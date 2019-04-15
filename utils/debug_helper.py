@@ -1,14 +1,14 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from utils.dataset_helper import Dataset
+from utils.dataset_helper import Dataset, RESULT_DISPLAY_CORRECT, RESULT_DISPLAY_POINTS
 from utils.model import Angle, Arm, BaseArm
 from utils.plotting_helper import plot_line
 
 OKGREEN = '\033[92m'
 FAIL = '\033[91m'
 ENDC = '\033[0m'
-INFO = '\033[36m'
+INFO = '\033[35m'
 POINTS_INFO = '\033[1;36m'
 
 
@@ -37,12 +37,14 @@ def print_debug_info(dataset: Dataset, ranking):
     for image, r in zip(dataset.images, ranking):
         cor = image.correct[0]
         ans = r[0]
-        print("correct answer for image {} is {}; got {} {}".format(image.name, cor, ans, result(cor == ans)))
-    points = calculate_points(ranking, dataset)
-    total_points = len(dataset.images)
-    print("received points: {}{}/{} ({}%){}".format(
-        POINTS_INFO, points, total_points, points / total_points * 100, ENDC)
-    )
+        if RESULT_DISPLAY_CORRECT:
+            print("correct answer for image {} is {}; got {} {}".format(image.name, cor, ans, result(cor == ans)))
+    if RESULT_DISPLAY_POINTS:
+        points = calculate_points(ranking, dataset)
+        total_points = len(dataset.images)
+        print("received points: {}{}/{} ({}%){}".format(
+            POINTS_INFO, points, total_points, points / total_points * 100, ENDC)
+        )
 
 
 def show_debug_info(ang: [Angle], arms: [Arm], coords, image, best_bases: [BaseArm]):
@@ -51,8 +53,6 @@ def show_debug_info(ang: [Angle], arms: [Arm], coords, image, best_bases: [BaseA
     for a in best_bases:
         color = 'yellow'
         plot_line(ax, a.arm.a, a.arm.b, color)
-
-    print(ang)
     plt.show()
 
 
@@ -85,11 +85,23 @@ def show_comparing_points(img1, f_angles, img2, s_angles, points, first_as_first
 
 
 def add_points(ax1, ax2, p1, p2, is_first_first, index):
-    color = ('blue', 'green')
+    colors = ['#FF5722', '#FFC107', '#9C27B0', '#E91E63', '#607D8B', '#03A9F4', '#FF9800']
     if index == 0:
-        color = ('red', 'red')
-    elif index == 1:
-        color = ('orange', 'orange')
-    pp1, pp2 = (p1.point, p2.point) if is_first_first else (p2.point, p1.point)
-    ax1.plot(pp1[1] / 4, pp1[0] / 4, '*', color=color[0])
-    ax2.plot(pp2[1] / 4, pp2[0] / 4, '*', color=color[1])
+        color = ('#0D47A1', '#880E4F')
+    else:
+        c = colors[index % len(colors)]
+        color = (c, c)
+    pp1, pp2 = (p1.angle.point, p2.angle.point) if is_first_first else (p2.angle.point, p1.angle.point)
+    ax1.plot(pp1[1], pp1[0], '*', color=color[0])
+    ax2.plot(pp2[1], pp2[0], '*', color=color[1])
+
+
+def show_angle_on_image(image, angle: Angle):
+    fig, ax = plt.subplots()
+    ax.imshow(image, interpolation='nearest', cmap=plt.cm.Greys_r)
+    angles_points = np.array([angle.armA.a, angle.armB.a, angle.armB.b])
+    ax.plot(angles_points[:, 1], angles_points[:, 0], '-r', linewidth=5)
+    ax.plot(angle.armA.a[1], angle.armA.a[0], '*', color='blue')
+    ax.plot(angle.armB.a[1], angle.armB.a[0], '*', color='green')
+    ax.plot(angle.armB.b[1], angle.armB.b[0], '*', color='orange')
+    plt.show()
