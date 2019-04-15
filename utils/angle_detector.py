@@ -114,23 +114,23 @@ def calculate_arms(coords: [[int, int]]):
     return arms
 
 
-def angles(img: Image):
+def angles(img: Image, resize_image: bool = True):
     if DEBUG:
         print("{}image_{}{}".format('\n' * 2, img.name, '-' * 20))
-    image = img.data
-    image = resize(image, (image.shape[0] * 4, image.shape[1] * 4), anti_aliasing=True)
-    con = find_contours(image, .8)
+    if resize_image:
+        img.data = resize(img.data, (img.data.shape[0] * 4, img.data.shape[1] * 4), anti_aliasing=True)
+    con = find_contours(img.data, .8)
     contour = con[0]
-    min_distance = (image.shape[0] + image.shape[1]) / 100
+    min_distance = (img.data.shape[0] + img.data.shape[1]) / 100
     coords = approximate_polygon(contour, tolerance=min_distance / 2)
-    image.points_coords = coords
+    img.points_coords = coords[:-1]
     arms, ang = calculate_meaningful_points(coords[:-1], min_distance)
 
     arms_bases = find_best_bases(arms)
     img.arms = arms
 
     if DEBUG and DEBUG_DISPLAY_IMAGES:
-        show_debug_info(ang, arms, coords, image, arms_bases)
+        show_debug_info(ang, arms, coords, img.data, arms_bases)
 
     return ang, arms_bases
 
