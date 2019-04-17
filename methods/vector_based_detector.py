@@ -9,6 +9,11 @@ import cv2
 
 
 def xy_to_yx(point: [int, int]):
+    """
+    Swaps x and x values. In some functions openCV returns [x, y] instead of [y, x].
+    :param point:
+    :return:
+    """
     return [point[1], point[0]]
 
 
