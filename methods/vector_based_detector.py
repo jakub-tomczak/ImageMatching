@@ -8,6 +8,61 @@ from utils.points_helpers import get_orthogonal_vector, distance
 import cv2
 
 
+def xy_to_yx(point: [int, int]):
+    return [point[1], point[0]]
+
+
+def find_base_from_box(image: Image, box: [[int, int]]):
+    # the highest situated point in the rectangle (we need to compare 2 lengths from 3 points)
+    point_to_exclude = np.unravel_index(box[:, 0].argmin(), box[:, 0].shape)
+    distances = []
+
+    # find two distances with their indices of the first point in box array
+    # assumes that box has 4 rows
+    for i in range(len(box)):
+        if i <= point_to_exclude[0] <= i+1:
+            # don't draw point between the current and the point_to_exclude
+            continue
+        distances.append([i, distance(box[i], box[(i+1) % len(box)])])
+
+    # sort from the longest to the shortest distance, take the longest one
+    longest_distance = sorted(distances, key=(lambda x: x[1]), reverse=True)[0]
+
+    first = box[longest_distance[0]]
+    second = box[(longest_distance[0] + 1) % len(box)]
+
+    third = [first[0] if first[1] < second[1] else second[0], max(first[1], second[1])]
+
+    fig, ax = plt.subplots()
+    ax.imshow(image.data, interpolation='nearest', cmap=plt.cm.Greys_r)
+    for i in range(len(box)):
+        # ax.plot expects x then y value
+        ax.plot([box[i][1], box[(i + 1) % len(box)][1]], [box[i][0], box[(i + 1) % len(box)][0]], '-y', linewidth=1)
+
+    ax.plot([first[1], second[1]], [first[0], second[0]], '-r', linewidth=1)
+    ax.plot([second[1], third[1]], [second[0], third[0]], '-r', linewidth=1)
+    ax.plot([third[1], first[1]], [third[0], first[0]], '-r', linewidth=1)
+    plt.show()
+
+
+def plot_box(image: Image, box: [[int, int]]):
+    fig, ax = plt.subplots()
+    ax.imshow(image.data, interpolation='nearest', cmap=plt.cm.Greys_r)
+    for i in range(len(box)):
+        # ax.plot expects x then y value
+        ax.plot([box[i][1], box[(i + 1) % len(box)][1]], [box[i][0], box[(i + 1) % len(box)][0]], '-y', linewidth=1)
+    plt.show()
+
+
+def get_min_area_rectangle_box(image: Image):
+    _, contours, hierarchy = cv2.findContours(image.data, 1, 2)
+    cnt = contours[0]
+    rect = cv2.minAreaRect(cnt)
+    box = cv2.boxPoints(rect)
+    box = [xy_to_yx(point) for point in box]
+    return np.int0(box)
+
+
 def get_initial_vertices(image: Image):
     """
     Finds start and end point that constitutes a vector for find deviations.
@@ -113,6 +168,9 @@ def find_deviations_in_cut(image: Image, start_point: [float, float], end_point:
 
 def find_matching_images(dataset: Dataset):
     for image in dataset.images:
+        rect_box = get_min_area_rectangle_box(image)
+        # plot_box(image, rect_box)
+        find_base_from_box(image, rect_box)
         start, end = get_initial_vertices(image)
 
         if start is None or end is None:
