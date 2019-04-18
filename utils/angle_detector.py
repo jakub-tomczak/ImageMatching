@@ -1,5 +1,5 @@
 from skimage.measure import find_contours, approximate_polygon
-from utils.debug_helper import  show_angle_on_image
+from utils.debug_helper import show_angle_on_image
 import numpy as np
 from utils.dataset_helper import Image, Dataset
 from utils.debug_conf import *
@@ -36,27 +36,55 @@ class CompareResult:
                 if show:
                     show_comparing_points(first.image.data, f_angles, second.image.data, s_angles, points,
                                           first_as_first)
-                different_offsets.append(total_sim / max(shorter_len, 1))
+                different_offsets.append(total_sim / max(longer_len, 1))
         self.similarity = max(different_offsets)
 
     @staticmethod
     def find_matching_angle(a: [ComparePoint], b: [ComparePoint], a_i: int, b_i: int):
-        a_point: ComparePoint = a[a_i]
-        b_point: ComparePoint = b[b_i]
+        a_point, b_point, a_off, b_off = CompareResult.get_aligned_points(a, b, a_i, b_i)
+        if a_point is None:
+            return a_off, b_off, 0
+
         if a_point.can_compare_with(b_point):
-            return a_point.similarity(b_point)
+            a0, b0, sim = a_point.similarity(b_point)
+            return a0 + a_off, b0 + b_off, sim
         else:
-            if b_i > 0:
-                b_point2 = b[b_i - 1]
+            if b_i - b_off > 0:
+                b_point2 = b[b_i - 1 - b_off]
                 if a_point.can_compare_with(b_point2):
                     a0, b0, sim = a_point.similarity(b_point2)
-                    return a0, b0 + 1, sim
-            if a_i < len(a) - 1:
-                a_point2 = a[a_i + 1]
+                    return a0 + a_off, b0 + 1 + b_off, sim
+            if a_i + a_off < len(a) - 1:
+                a_point2 = a[a_i + 1 + a_off]
                 if a_point2.can_compare_with(b_point):
                     a0, b0, sim = a_point2.similarity(b_point)
-                    return a0 + 1, b0, sim
-        return 0, 0, 0
+                    return a0 + 1 + a_off, b0 + b_off, sim
+        return a_off, b_off, 0
+
+    @staticmethod
+    def get_aligned_points(a: [ComparePoint], b: [ComparePoint], a_i, b_i):
+        def is_in_range():
+            return a_i + a_off < len_a and b_i - b_off >= 0
+
+        a_point: ComparePoint = a[a_i]
+        b_point: ComparePoint = b[b_i]
+        a_off = 0
+        b_off = 0
+        range_com = 0.1
+        len_a = len(a)
+        dif = a_point.progress_difference(b_point)
+
+        while (dif > range_com or dif < -range_com) and is_in_range():
+            if dif < -range_com:
+                a_off += 1
+                a_point = a[a_i + a_off]
+            elif dif > range_com:
+                b_off += 1
+                b_point: ComparePoint = b[b_i - b_off]
+            dif = a_point.progress_difference(b_point)
+        if not is_in_range():
+            return None, None, a_off, b_off
+        return a_point, b_point, a_off, b_off
 
 
 def calculate_meaningful_points(coords: [[int, int]], min_distance: float):
@@ -112,7 +140,7 @@ def angles(img: Image):
     con = find_contours(image, .8)
     contour = max(con, key=lambda x: len(x))
     min_distance = (image.shape[0] + image.shape[1]) / 100
-    coords = approximate_polygon(contour, tolerance=min_distance/0.75)
+    coords = approximate_polygon(contour, tolerance=min_distance / 0.75)
     arms, ang = calculate_meaningful_points(coords[:-1], min_distance * 3)
 
     arms_bases = find_best_bases(arms)
@@ -149,9 +177,9 @@ def prepare_image_data(img: Image):
             new_ang = ang[eng_angle_i:] + ang[:b.start]
         else:
             new_ang = ang[eng_angle_i:b.start]
-        first = ExtremeComparePoint(new_ang[0])
+        first = ExtremeComparePoint(new_ang[0], True)
         last_point_num = len(new_ang) - 1
-        last = ExtremeComparePoint(new_ang[last_point_num])
+        last = ExtremeComparePoint(new_ang[last_point_num], False)
         serials = [first]
         for i, a in enumerate(new_ang):
             if i == 0 or i == last_point_num:

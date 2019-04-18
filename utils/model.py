@@ -66,12 +66,16 @@ class Angle:
 
 
 def angles_complement(ang1: float, ang2: float, target: float):
-    return pow(1 - abs((ang1 + ang2) / target - 1), 4)
+    return pow(1 - abs((ang1 + ang2) / target - 1), 8)
 
 
 class ComparePoint:
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, angle, progress) -> None:
+        self.angle = angle
+        self.progress = progress
+
+    def progress_difference(self, other) -> float:
+        return self.progress - (1 - other.progress)
 
     def can_compare_with(self, other) -> bool:
         return False
@@ -81,9 +85,8 @@ class ComparePoint:
 
 
 class ExtremeComparePoint(ComparePoint):
-    def __init__(self, angle: Angle):
-        super().__init__()
-        self.angle = angle
+    def __init__(self, angle: Angle, is_start: bool):
+        super().__init__(angle, 0 if is_start else 1)
 
     def can_compare_with(self, other) -> bool:
         return isinstance(other, ExtremeComparePoint)
@@ -94,8 +97,7 @@ class ExtremeComparePoint(ComparePoint):
 
 class SerialComparePoint(ComparePoint):
     def __init__(self, angle: Angle, location_angle: Angle, neighbors_before: [Angle], neighbors_after: [Angle]):
-        super().__init__()
-        self.angle = angle
+        super().__init__(angle, location_angle.armA.length / (location_angle.armA.length + location_angle.armB.length))
         self.location_angle = location_angle
         self.__neighbors_before = neighbors_before
         self.__neighbors_after = neighbors_after
@@ -105,7 +107,7 @@ class SerialComparePoint(ComparePoint):
     def can_compare_with(self, other) -> bool:
         if not isinstance(other, SerialComparePoint):
             return False
-        return self.location_angle.can_match(other.location_angle) and\
+        return self.location_angle.can_match(other.location_angle) and \
                self.location_angle.mirror_similarity(other.location_angle) > 0.25
 
     def similarity(self, other) -> (int, int, float):
