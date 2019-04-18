@@ -1,4 +1,5 @@
 import numpy as np
+from skimage.filters import threshold_otsu
 from skimage.measure import find_contours, approximate_polygon
 
 from utils.compare_result import CompareResult
@@ -58,8 +59,9 @@ def calculate_arms(coords: [[int, int]]):
 
 def angles(img: Image):
     image = img.data
-    # image = resize(image, (image.shape[0] * 4, image.shape[1] * 4), anti_aliasing=True)
-    # img.data = image
+    local_thresh = threshold_otsu(image)
+    image = image > local_thresh
+    img.data = image
     con = find_contours(image, .8)
     contour = max(con, key=lambda x: len(x))
     min_distance = (image.shape[0] + image.shape[1]) / 100
