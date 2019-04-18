@@ -115,7 +115,7 @@ class SerialComparePoint(ComparePoint):
     def similarity(self, other) -> (int, int, float):
         if self.angle.can_match(other.angle):
             return 0, 0, self.angle.mirror_similarity(other.angle, False)
-        others: [(int, Angle)] = other._matchers_before()
+        others = other._matchers_before()
         for i, o in others:
             if self.angle.can_match(o):
                 return 0, i, self.angle.mirror_similarity(o)

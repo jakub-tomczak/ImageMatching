@@ -1,6 +1,5 @@
 from utils.debug_helper import show_comparing_points
 from utils.model import ComparePoint, ImageAngleData
-from utils.debug_helper import show_angle_on_image
 
 
 class CompareResult:
@@ -60,8 +59,8 @@ class CompareResult:
         def is_in_range():
             return a_i + a_off < len_a and b_i - b_off >= 0
 
-        a_point: ComparePoint = a[a_i]
-        b_point: ComparePoint = b[b_i]
+        a_point = a[a_i]
+        b_point = b[b_i]
         a_off = 0
         b_off = 0
         range_com = 0.1
@@ -74,7 +73,7 @@ class CompareResult:
                 a_point = a[a_i + a_off]
             elif dif > range_com:
                 b_off += 1
-                b_point: ComparePoint = b[b_i - b_off]
+                b_point = b[b_i - b_off]
             dif = a_point.progress_difference(b_point)
         if not is_in_range():
             return None, None, a_off, b_off
