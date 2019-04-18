@@ -40,10 +40,10 @@ def print_debug_info(dataset: Dataset, ranking):
         if RESULT_DISPLAY_CORRECT:
             print("correct answer for image {} is {}; got {} {}".format(image.name, cor, ans, result(cor == ans)))
     if RESULT_DISPLAY_POINTS:
-        points = calculate_points(ranking, dataset)
+        points = round(calculate_points(ranking, dataset), 4)
         total_points = len(dataset.images)
-        print("received points: {}{}/{} ({}%){}".format(
-            POINTS_INFO, points, total_points, points / total_points * 100, ENDC)
+        print("Points: {}{}/{} ({}%){}".format(
+            POINTS_INFO, points, total_points, round(points / total_points * 100, 4), ENDC)
         )
 
 

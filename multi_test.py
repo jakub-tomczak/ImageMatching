@@ -12,5 +12,5 @@ if __name__ == '__main__':
         to_test.append((dirname, images))
     to_test = sorted(to_test, key=lambda o: o[0])
     for dirname, images in to_test:
-        print("TESTING " + INFO + dirname + ENDC)
+        print(INFO + dirname + ENDC)
         run(dirname, images, True, False)
