@@ -130,6 +130,10 @@ def get_ranking(dataset: Dataset):
             compare_res = CompareResult(a1, a2)
             a1.comparisons[a2] = compare_res
             a2.comparisons[a1] = compare_res
+    if RESULT_DISPLAY_RANKING_POINTS:
+        results = [[(r[0].image.name, r[1].similarity) for r in a.ranking()] for a in ang]
+        for r in results:
+            print(r)
 
     return [[r[0].image.name for r in a.ranking()] for a in ang]
 
