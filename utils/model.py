@@ -35,6 +35,8 @@ class Angle:
         self.armB = b
         self.angle = Angle.calculate_angle_between(a.a, b.a, b.b)
         self.point = b.a
+        self.point_a = a.a
+        self.point_c = b.b
 
     def is_half_full(self):
         return abs(180 - self.angle) <= HALF_FULL_ANGLE_ACCEPT_THRESHOLD
@@ -128,15 +130,35 @@ class SerialComparePoint(ComparePoint):
 
     def _matchers_before(self) -> [(int, Angle)]:
         if self.__matchers_before is None:
-            self.__matchers_before = [(i + 1, Angle.for_points(a.armA.a, self.angle.armB.a, self.angle.armB.b))
-                                      for i, a in enumerate(self.__neighbors_before)]
+            self.__matchers_before = merge_angles_before(self.__neighbors_before, self.angle)
         return self.__matchers_before
 
     def _matchers_after(self) -> [(int, Angle)]:
         if self.__matchers_after is None:
-            self.__matchers_after = [(i + 1, Angle.for_points(self.angle.armA.a, a.armB.a, a.armB.b))
-                                     for i, a in enumerate(self.__neighbors_after)]
+            self.__matchers_after = merge_angles_after(self.angle, self.__neighbors_after)
         return self.__matchers_after
+
+
+def merge_angles_after(before: Angle, after: [Angle]):
+    result = []
+    visited = [before.point]
+    for ai, a in enumerate(after):
+        visited.append(a.point)
+        result.extend(make_angles_between(before.point_a, a.point_c, visited, ai + 1))
+    return result
+
+
+def merge_angles_before(before: [Angle], after: Angle):
+    result = []
+    visited = [after.point]
+    for bi, b in enumerate(before):
+        visited.append(b.point)
+        result.extend(make_angles_between(b.point_a, after.point_c, visited, bi + 1))
+    return result
+
+
+def make_angles_between(start: [[float]], end: [[float]], centers: [[float]], offset):
+    return [(offset, Angle.for_points(start, c, end)) for c in centers]
 
 
 class ImageAngleData:
