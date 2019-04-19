@@ -168,7 +168,7 @@ def calculate_deviation_for_point(image: Image, start: [float, float], orthogona
 
 def find_deviations_in_cut(image: Image, start_point: [float, float, int], end_point: [float, float, int],
                            debug_draw: bool = True) -> [float]:
-    number_of_points_in_vector = 20
+    number_of_points_in_vector = 10
     start_point_distance_from_base = distance(start_point[0], image.arms[(start_point[1] + 1) % len(image.arms)].a)
     end_point_distance_from_base = distance(end_point[0], image.arms[(end_point[1] - 1) % len(image.arms)].b)
     orthogonal_vector_length = int(min(start_point_distance_from_base, end_point_distance_from_base))
