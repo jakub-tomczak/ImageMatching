@@ -199,17 +199,23 @@ def find_deviations_in_cut(image: Image, start_point: [float, float], end_point:
             ax.plot([x, diff[2]], [y, diff[1]], '-y', linewidth=1)
             # ax.plot([x, x - normal_vector_positive[1]], [y, y - normal_vector_positive[0]], '-y', linewidth=1)
         plt.show()
-    print('ok')
 
 
 def find_matching_images(dataset: Dataset):
-    for image in dataset.images:
-        rect_box = get_min_area_rectangle_box(image)
-        # plot_box(image, rect_box)
-        find_base_from_box(image, rect_box)
-        start, end = get_initial_vertices(image)
+    find_min_rectangle = False
+    find_deviations = True
 
-        if start is None or end is None:
-            print("Couldn't find coords of deviation vector, image {}".format(image.name))
-            continue
-        find_deviations_in_cut(image, start, end)
+    for image in dataset.images:
+        if find_min_rectangle:
+            rect_box = get_min_area_rectangle_box(image)
+            # plot_box(image, rect_box)
+            base_coords = find_base_from_box(image, rect_box)
+            rotate_image_using_base(image, base_coords)
+
+        if find_deviations:
+            start, end = get_initial_vertices(image)
+
+            if start is None or end is None:
+                print("Couldn't find coords of deviation vector, image {}".format(image.name))
+                continue
+            find_deviations_in_cut(image, start, end)
