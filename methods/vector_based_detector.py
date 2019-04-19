@@ -3,6 +3,8 @@ from utils.dataset_helper import Image, Dataset
 from utils.debug_conf import DEBUG
 import matplotlib.pyplot as plt
 import numpy as np
+
+from utils.model import Angle
 from utils.plotting_helper import interpolate_between_points
 from utils.points_helpers import get_orthogonal_vector, distance
 import cv2
@@ -15,6 +17,25 @@ def xy_to_yx(point: [int, int]):
     :return:
     """
     return [point[1], point[0]]
+
+
+def rotate_image_using_base(image: Image, base: [[int, int]]):
+    """
+    :param image:
+    :param base: [first, second] which are arrays of 2 elements indicating two points of the base. [y, x]
+    :return:
+    """
+    first = base[0]
+    second = base[1]
+    third = [max(first[1], second[1]), first[1] if first[0] < second[0] else second[1]]
+
+    angle = Angle.calculate_angle_between(first, second, third)
+    print("angle is", angle)
+    M = cv2.getRotationMatrix2D((image.data.shape[1] / 2, image.data.shape[0] / 2), -angle, 1)
+    rotated_image = cv2.warpAffine(image.data, M, image.data.shape)
+    cv2.imshow('rotated image', rotated_image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 
 def find_base_from_box(image: Image, box: [[int, int]]):
@@ -36,8 +57,8 @@ def find_base_from_box(image: Image, box: [[int, int]]):
     first = box[longest_distance[0]]
     second = box[(longest_distance[0] + 1) % len(box)]
 
+    # plot image with base indicated
     third = [first[0] if first[1] < second[1] else second[0], max(first[1], second[1])]
-
     fig, ax = plt.subplots()
     ax.imshow(image.data, interpolation='nearest', cmap=plt.cm.Greys_r)
     for i in range(len(box)):
@@ -48,6 +69,8 @@ def find_base_from_box(image: Image, box: [[int, int]]):
     ax.plot([second[1], third[1]], [second[0], third[0]], '-r', linewidth=1)
     ax.plot([third[1], first[1]], [third[0], first[0]], '-r', linewidth=1)
     plt.show()
+
+    return [first, second]
 
 
 def plot_box(image: Image, box: [[int, int]]):
