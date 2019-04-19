@@ -18,6 +18,7 @@ class Image:
         self.points_coords = []
         self.base_coords = ()
         self.arms = []
+        self.deviations_vector = []
 
     def set_matching_images(self, matching):
         self.correct = [int(x) for x in matching.split(' ')]

@@ -188,17 +188,22 @@ def find_deviations_in_cut(image: Image, start_point: [float, float, int], end_p
             ax.plot([x, x - normal_vector_positive[1]], [y, y - normal_vector_positive[0]], '-b', linewidth=1)
         plt.show()
 
-    deviations_vector = np.zeros((number_of_points_in_vector, 3))
+    deviations_vector = np.zeros((number_of_points_in_vector-2, 3))
     for i, point in enumerate(zip(yy[1:-1], xx[1:-1])):
         diff = calculate_deviation_for_point(image, np.array(point), normal_vector_positive, orthogonal_vector_length, False)
         if diff is None:
             diff = \
                 calculate_deviation_for_point(image, np.array(point), -normal_vector_positive, orthogonal_vector_length, False)
-            print("blue")
+        #     # print("blue")
+        # else:
+        #     # print("yellow")
+        if diff is None:
+            deviations_vector[i] = [0, 0, 1e-5]
         else:
-            print("yellow")
-        deviations_vector[i] = diff
+            deviations_vector[i] = diff
 
+    image.deviations_vector = deviations_vector
+    print("image {}, vector {}".format(image.name, image.deviations_vector))
     if debug_draw:
         fig, ax = plt.subplots()
         ax.imshow(image.data, interpolation='nearest', cmap=plt.cm.Greys_r)
@@ -214,7 +219,7 @@ def find_matching_images(dataset: Dataset):
     find_min_rectangle = False
     find_deviations = True
 
-    for image in dataset.images[2:]:
+    for image in dataset.images:
         if find_min_rectangle:
             rect_box = get_min_area_rectangle_box(image)
             # plot_box(image, rect_box)
@@ -227,4 +232,13 @@ def find_matching_images(dataset: Dataset):
             if start is None or end is None:
                 print("Couldn't find coords of deviation vector, image {}".format(image.name))
                 continue
-            find_deviations_in_cut(image, start, end)
+            find_deviations_in_cut(image, start, end, True)
+
+
+    from scipy import spatial
+    for index, image in enumerate(dataset.images):
+        if find_deviations:
+            print("image {}".format(image.name))
+            for c_index, c_value in enumerate(dataset.images):
+                sim = spatial.distance.cosine(image.deviations_vector[:, 0], -c_value.deviations_vector[:, 0])
+                print('\t {} vs {}: {}'.format(image.name, c_value.name, sim))
