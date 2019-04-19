@@ -97,9 +97,13 @@ class ExtremeComparePoint(ComparePoint):
         return 0, 0, self.angle.mirror_similarity(other.angle, True)
 
 
+def get_progress(angle: Angle):
+    return (angle.point[1] - angle.point_a[1]) / (angle.point_c[1] - angle.point_a[1])
+
+
 class SerialComparePoint(ComparePoint):
     def __init__(self, angle: Angle, location_angle: Angle, neighbors_before: [Angle], neighbors_after: [Angle]):
-        super().__init__(angle, location_angle.armA.length / (location_angle.armA.length + location_angle.armB.length))
+        super().__init__(angle, get_progress(location_angle))
         self.location_angle = location_angle
         self.__neighbors_before = neighbors_before
         self.__neighbors_after = neighbors_after
