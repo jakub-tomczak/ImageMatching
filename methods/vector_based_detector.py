@@ -95,7 +95,7 @@ def get_initial_vertices(image: Image):
     """
     Finds start and end point that constitutes a vector for find deviations.
     :param image:
-    :return:
+    :return: start_point and end_point which represent points and their indices in the image.arms array
     """
     coords, _ = get_contours(image, True)
     image.points_coords = coords[:-1]
@@ -109,8 +109,9 @@ def get_initial_vertices(image: Image):
             print('No base found for image {}.'.format(image.name))
         return None
 
-    start_point = image.arms[(most_probable_base.start - 1) % len(image.arms)].a
-    end_point = image.arms[(most_probable_base.end + 1) % len(image.arms)].b
+    image.base_coords = most_probable_base
+    start_point = (image.arms[(most_probable_base.start - 1) % len(image.arms)].a, (most_probable_base.start - 1) % len(image.arms))
+    end_point = (image.arms[(most_probable_base.end + 1) % len(image.arms)].b, (most_probable_base.start + 1) % len(image.arms))
     return start_point, end_point
 
 
@@ -124,21 +125,36 @@ def calculate_deviation_for_point(image: Image, start: [float, float], orthogona
         ax.imshow(image.data, interpolation='nearest', cmap=plt.cm.Greys_r)
         ax.plot(xx, yy, '-g', linewidth=1)
 
+    def has_same_color(start_value, img, yy, xx, index):
+        is_color_the_same = abs(img[yy[index], xx[index]] - start_value) < .2
+        return is_color_the_same
+
+    def is_within_shape(img, xx, yy, current_index):
+        return img.shape[1] > xx[current_index] > 0 \
+               and img.shape[0] > yy[current_index] > 0
+
     def binary_search(data, start_index, stop_index, initial_value, xx, yy):
         current_index = (start_index+stop_index) // 2
         if debug_draw:
             diff = 1 if current_index+1 < len(xx) else -1
             ax.plot([xx[current_index], xx[current_index+diff]], [yy[current_index], yy[current_index+diff]], 'r', linewidth=3)
         # check whether we are in bounds
-        if data.shape[1] < xx[current_index] or xx[current_index] < 0 \
-                or data.shape[0] < yy[current_index] or yy[current_index] < 0:
+        if not is_within_shape(data, xx, yy, current_index):
             return None
-        if stop_index - start_index <= 1:
-            return [current_index, yy[current_index], xx[current_index]]
-        if abs(data[yy[current_index], xx[current_index]] - initial_value) < 1e-2:
-            # the same
+        # if stop_index - start_index <= 20:
+        #     if has_same_color(initial_value, data, yy, xx, current_index):
+        #         return None
+        #     else:
+        #         return [current_index, yy[current_index], xx[current_index]]
+        if has_same_color(initial_value, data, yy, xx, current_index):
+            if stop_index - start_index <= 1:
+                return None
+            # the same - go ahead
             start_index = current_index
         else:
+            if stop_index - start_index <= 20:
+                # this is a good candidate
+                return [current_index, yy[current_index], xx[current_index]]
             stop_index = current_index
         return binary_search(data, start_index, stop_index, initial_value, xx, yy)
 
@@ -150,29 +166,37 @@ def calculate_deviation_for_point(image: Image, start: [float, float], orthogona
     return val
 
 
-def find_deviations_in_cut(image: Image, start_point: [float, float], end_point: [float, float],
+def find_deviations_in_cut(image: Image, start_point: [float, float, int], end_point: [float, float, int],
                            debug_draw: bool = True) -> [float]:
     number_of_points_in_vector = 20
-    orthogonal_vector_length = int(min(image.data.shape) * .5)
+    start_point_distance_from_base = distance(start_point[0], image.arms[(start_point[1] + 1) % len(image.arms)].a)
+    end_point_distance_from_base = distance(end_point[0], image.arms[(end_point[1] - 1) % len(image.arms)].b)
+    orthogonal_vector_length = int(min(start_point_distance_from_base, end_point_distance_from_base))
+    start_point = start_point[0]
+    end_point = end_point[0]
     vector = [end_point[0] - start_point[0], end_point[1] - start_point[1]]
     normal_vector_positive = get_orthogonal_vector(vector, length=orthogonal_vector_length)
     yy, xx = interpolate_between_points(start_point, end_point, number_of_points_in_vector)
 
-    # if debug_draw:
-    #     fig, ax = plt.subplots()
-    #     ax.imshow(image.data, interpolation='nearest', cmap=plt.cm.Greys_r)
-    #     ax.plot(xx, yy, '-r')
-    #
-    #     for x, y in zip(xx[1:-1], yy[1:-1]):
-    #         ax.plot([x, x + normal_vector_positive[1]], [y, y + normal_vector_positive[0]], '-y', linewidth=1)
-    #     plt.show()
+    if debug_draw:
+        fig, ax = plt.subplots()
+        ax.imshow(image.data, interpolation='nearest', cmap=plt.cm.Greys_r)
+        ax.plot(xx, yy, '-r')
+
+        for x, y in zip(xx[1:-1], yy[1:-1]):
+            ax.plot([x, x + normal_vector_positive[1]], [y, y + normal_vector_positive[0]], '-y', linewidth=1)
+            ax.plot([x, x - normal_vector_positive[1]], [y, y - normal_vector_positive[0]], '-b', linewidth=1)
+        plt.show()
 
     deviations_vector = np.zeros((number_of_points_in_vector, 3))
     for i, point in enumerate(zip(yy[1:-1], xx[1:-1])):
-        diff = calculate_deviation_for_point(image, np.array(point), normal_vector_positive, orthogonal_vector_length)
+        diff = calculate_deviation_for_point(image, np.array(point), normal_vector_positive, orthogonal_vector_length, False)
         if diff is None:
             diff = \
-                calculate_deviation_for_point(image, np.array(point), -normal_vector_positive, orthogonal_vector_length)
+                calculate_deviation_for_point(image, np.array(point), -normal_vector_positive, orthogonal_vector_length, False)
+            print("blue")
+        else:
+            print("yellow")
         deviations_vector[i] = diff
 
     if debug_draw:
@@ -190,7 +214,7 @@ def find_matching_images(dataset: Dataset):
     find_min_rectangle = False
     find_deviations = True
 
-    for image in dataset.images:
+    for image in dataset.images[2:]:
         if find_min_rectangle:
             rect_box = get_min_area_rectangle_box(image)
             # plot_box(image, rect_box)
