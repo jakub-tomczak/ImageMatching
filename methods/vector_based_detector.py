@@ -148,21 +148,6 @@ def calculate_deviation_for_point(image: Image, start: [float, float], orthogona
         ax.plot([xx[current_index], xx[current_index + 1]], [yy[current_index], yy[current_index + 1]], 'b', linewidth=3)
         plt.show()
     return val
-    # while value_not_found:
-    #     if xx[current_index] >= image.data.shape[1] or yy[current_index] >= image.data.shape[0]:
-    #         current_index -= 1
-    #     if current_index == 0:
-    #         return None
-    #     # is different value found ?
-    #     if abs(image.data[yy[current_index], xx[current_index]] - start_value) > 1e-3:
-    #         # divide into int
-    #         current_index //= 2
-    #         continue
-    #     else:
-    #         for i in range(current_index, current_index*2):
-    #             if image.data[yy[i], xx[i]] != start_value:
-    #                 # i-th is the first index with a value different than start_value
-    #                 return i-1
 
 
 def find_deviations_in_cut(image: Image, start_point: [float, float], end_point: [float, float],
