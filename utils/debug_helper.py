@@ -91,19 +91,26 @@ def draw_image_spec(image, ang: [Angle], arms: [Arm], coords):
 
 def show_comparing_points(img1, f_angles: [ComparePoint], img2, s_angles: [ComparePoint], points: [ComparePoint],
                           first_as_first):
+    import matplotlib.transforms as mtransforms
     fig, (ax1, ax2) = plt.subplots(ncols=2)
     ax1.imshow(img1, interpolation='nearest', cmap=plt.cm.Greys_r)
-    ax2.imshow(img2, interpolation='nearest', cmap=plt.cm.Greys_r)
+    im = ax2.imshow(img2, interpolation='nearest', cmap=plt.cm.Greys_r)
     angles_points = np.array([a.angle.point for a in f_angles])
     ax1.plot(angles_points[:, 1], angles_points[:, 0], 'o', color='#9E9E9E', markersize=10)
     angles_points = np.array([a.angle.point for a in s_angles])
-    ax2.plot(angles_points[:, 1], angles_points[:, 0], 'o', color='#9E9E9E', markersize=10)
+    x_center = img2.shape[1] / 2
+    y_center = img2.shape[0] / 2
+    ax2.plot(x_center * 2 - angles_points[:, 1], y_center * 2 - angles_points[:, 0], 'o', color='#9E9E9E',
+             markersize=10)
+    ax2.set_facecolor((0, 0, 0))
+    tr = mtransforms.Affine2D().rotate_deg_around(x_center, y_center, 180) + ax2.transData
+    im.set_transform(tr)
     for i, (f1, f2) in enumerate(points):
-        add_points(ax1, ax2, f1, f2, first_as_first, i)
+        add_points(ax1, ax2, f1, f2, first_as_first, i, x_center * 2, y_center * 2)
     plt.show()
 
 
-def add_points(ax1, ax2, p1, p2, is_first_first, index):
+def add_points(ax1, ax2, p1, p2, is_first_first, index, x_size, y_size):
     colors = ['#FF5722', '#FFC107', '#9C27B0', '#E91E63', '#607D8B', '#03A9F4', '#FF9800']
     if index == 0:
         color = ('#0D47A1', '#880E4F')
@@ -112,7 +119,7 @@ def add_points(ax1, ax2, p1, p2, is_first_first, index):
         color = (c, c)
     pp1, pp2 = (p1.angle.point, p2.angle.point) if is_first_first else (p2.angle.point, p1.angle.point)
     ax1.plot(pp1[1], pp1[0], '*', color=color[0])
-    ax2.plot(pp2[1], pp2[0], '*', color=color[1])
+    ax2.plot(x_size - pp2[1], y_size - pp2[0], '*', color=color[1])
 
 
 def show_angle_on_image(image, angle: Angle):

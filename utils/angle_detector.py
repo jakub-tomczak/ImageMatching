@@ -1,6 +1,8 @@
+import math
 import numpy as np
 from skimage.filters import threshold_otsu
 from skimage.measure import find_contours, approximate_polygon
+from skimage.transform import rotate
 
 from utils.compare_result import CompareResult
 from utils.dataset_helper import Image, Dataset
@@ -69,11 +71,38 @@ def angles(img: Image):
     arms, ang = calculate_meaningful_points(coords[:-1], min_distance * 3)
 
     arms_bases = find_best_bases(arms)
+    slope_deg = arms_bases[0].arm.slope_angle()
+    if DEBUG:
+        image = rotate(image, slope_deg)
+        img.data = image
+    slope = math.radians(slope_deg)
+    origin = (image.shape[0] / 2, image.shape[1] / 2)
+    for a in arms:
+        a.a = rotate_point(origin, a.a, slope)
+        a.b = rotate_point(origin, a.b, slope)
+    for a in ang:
+        a.point = rotate_point(origin, a.point, slope)
+        a.point_a = rotate_point(origin, a.point_a, slope)
+        a.point_c = rotate_point(origin, a.point_c, slope)
 
     if DEBUG and DEBUG_DISPLAY_IMAGES:
         show_debug_info(ang, arms, coords, image, arms_bases)
 
     return ang, arms_bases
+
+
+def rotate_point(origin, point, angle):
+    """
+    Rotate a point counterclockwise by a given angle around a given origin.
+
+    The angle should be given in radians.
+    """
+    ox, oy = origin
+    px, py = point
+
+    qx = ox + math.cos(angle) * (px - ox) - math.sin(angle) * (py - oy)
+    qy = oy + math.sin(angle) * (px - ox) + math.cos(angle) * (py - oy)
+    return qx, qy
 
 
 def get_ranking(dataset: Dataset):
