@@ -91,32 +91,40 @@ def get_initial_vertices(image: Image):
     return start_point, end_point
 
 
-def calculate_deviation_for_point(image: Image, start: [float, float], orthogonal_vector, length):
+def calculate_deviation_for_point(image: Image, start: [float, float], orthogonal_vector, length, debug_draw: bool = False):
     # points to check
     yy, xx = interpolate_between_points(start, start + orthogonal_vector, length, target_type=int)
     start_value = image.data[yy[0], xx[0]]
 
-    fig, ax = plt.subplots()
-    ax.imshow(image.data, interpolation='nearest', cmap=plt.cm.Greys_r)
-    ax.plot(xx, yy, '-r')
-    plt.show()
+    if debug_draw:
+        fig, ax = plt.subplots()
+        ax.imshow(image.data, interpolation='nearest', cmap=plt.cm.Greys_r)
+        ax.plot(xx, yy, '-g', linewidth=1)
 
     def binary_search(data, start_index, stop_index, initial_value, xx, yy):
         current_index = (start_index+stop_index) // 2
+        if debug_draw:
+            diff = 1 if current_index+1 < len(xx) else -1
+            ax.plot([xx[current_index], xx[current_index+diff]], [yy[current_index], yy[current_index+diff]], 'r', linewidth=3)
         # check whether we are in bounds
         if data.shape[1] < xx[current_index] or xx[current_index] < 0 \
                 or data.shape[0] < yy[current_index] or yy[current_index] < 0:
             return None
         if stop_index - start_index <= 1:
-            return [start_index, yy[start_index], xx[start_index]]
-        if abs(data[yy[current_index], xx[current_index]] - initial_value) < 1e-3:
+            return [current_index, yy[current_index], xx[current_index]]
+        if abs(data[yy[current_index], xx[current_index]] - initial_value) < 1e-2:
             # the same
             start_index = current_index
         else:
             stop_index = current_index
         return binary_search(data, start_index, stop_index, initial_value, xx, yy)
 
-    return binary_search(image.data, 1, length, start_value, xx, yy)
+    val = binary_search(image.data, 1, length, start_value, xx, yy)
+    if debug_draw and val is not None:
+        current_index = val[0]
+        ax.plot([xx[current_index], xx[current_index + 1]], [yy[current_index], yy[current_index + 1]], 'b', linewidth=3)
+        plt.show()
+    return val
     # while value_not_found:
     #     if xx[current_index] >= image.data.shape[1] or yy[current_index] >= image.data.shape[0]:
     #         current_index -= 1
@@ -142,14 +150,14 @@ def find_deviations_in_cut(image: Image, start_point: [float, float], end_point:
     normal_vector_positive = get_orthogonal_vector(vector, length=orthogonal_vector_length)
     yy, xx = interpolate_between_points(start_point, end_point, number_of_points_in_vector)
 
-    if debug_draw:
-        fig, ax = plt.subplots()
-        ax.imshow(image.data, interpolation='nearest', cmap=plt.cm.Greys_r)
-        ax.plot(xx, yy, '-r')
-
-        for x, y in zip(xx[1:-1], yy[1:-1]):
-            ax.plot([x, x + normal_vector_positive[1]], [y, y + normal_vector_positive[0]], '-y', linewidth=1)
-        plt.show()
+    # if debug_draw:
+    #     fig, ax = plt.subplots()
+    #     ax.imshow(image.data, interpolation='nearest', cmap=plt.cm.Greys_r)
+    #     ax.plot(xx, yy, '-r')
+    #
+    #     for x, y in zip(xx[1:-1], yy[1:-1]):
+    #         ax.plot([x, x + normal_vector_positive[1]], [y, y + normal_vector_positive[0]], '-y', linewidth=1)
+    #     plt.show()
 
     deviations_vector = np.zeros((number_of_points_in_vector, 3))
     for i, point in enumerate(zip(yy[1:-1], xx[1:-1])):
