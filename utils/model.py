@@ -113,7 +113,7 @@ class SerialComparePoint(ComparePoint):
     def can_compare_with(self, other) -> bool:
         if not isinstance(other, SerialComparePoint):
             return False
-        return self.location_angle.can_match(other.location_angle) and \
+        return (self.location_angle.can_match(other.location_angle) or abs(self.progress_difference(other)) < 0.075) and \
                self.location_angle.mirror_similarity(other.location_angle) > 0.25
 
     def similarity(self, other) -> (int, int, float):
