@@ -126,7 +126,7 @@ def calculate_deviation_for_point(image: Image, start: [float, float], orthogona
         ax.plot(xx, yy, '-g', linewidth=1)
 
     def has_same_color(start_value, img, yy, xx, index):
-        is_color_the_same = abs(img[yy[index], xx[index]] - start_value) < .2
+        is_color_the_same = img[yy[index], xx[index]] == start_value
         return is_color_the_same
 
     def is_within_shape(img, xx, yy, current_index):
