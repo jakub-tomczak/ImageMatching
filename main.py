@@ -2,8 +2,8 @@ import argparse
 
 from methods.vector_based_detector import find_matching_images
 from utils.angle_detector import get_ranking
-from utils.dataset_helper import load_dataset, Dataset
-from utils.debug_helper import print_debug_info
+from utils.dataset_helper import Dataset
+from utils.dataset_helper import load_dataset
 from utils.debug_conf import *
 
 
@@ -31,7 +31,7 @@ def method_two(dataset: Dataset, debug: bool, display_ranking: bool):
 def run(path, number_of_images, debug=False, display_ranking=True):
     dataset = load_dataset(path, number_of_images)
 
-    method = method_two
+    method = method_one
     method(dataset, debug, display_ranking)
 
 
