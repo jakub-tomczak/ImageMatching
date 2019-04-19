@@ -10,6 +10,23 @@ FAIL = '\033[91m'
 ENDC = '\033[0m'
 INFO = '\033[35m'
 POINTS_INFO = '\033[1;36m'
+TOTAL_INFO = '\033[1;34m'
+
+points_so_far = 0
+possible_points = 0
+
+
+def add_points_to_score(points, total):
+    global points_so_far
+    global possible_points
+    points_so_far += points
+    possible_points += total
+
+
+def get_collected_points():
+    global points_so_far
+    global possible_points
+    return points_so_far, possible_points
 
 
 def result(is_ok):
@@ -45,6 +62,7 @@ def print_debug_info(dataset: Dataset, ranking):
         print("Points: {}{}/{} ({}%){}".format(
             POINTS_INFO, points, total_points, round(points / total_points * 100, 4), ENDC)
         )
+        add_points_to_score(points, total_points)
 
 
 def show_debug_info(ang: [Angle], arms: [Arm], coords, image, best_bases: [BaseArm]):
