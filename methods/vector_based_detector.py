@@ -198,7 +198,7 @@ def find_deviations_in_cut(image: Image, start_point: [float, float, int], end_p
         # else:
         #     # print("yellow")
         if diff is None:
-            deviations_vector[i] = [0, 0, 1e-5]
+            deviations_vector[i] = [1e-5, 0, 0]
         else:
             deviations_vector[i] = diff
 
