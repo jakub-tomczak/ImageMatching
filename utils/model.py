@@ -37,6 +37,7 @@ class Angle:
         self.point = b.a
         self.point_a = a.a
         self.point_c = b.b
+        self.ratio = a.length / (a.length + b.length)
 
     def is_half_full(self):
         return abs(180 - self.angle) <= HALF_FULL_ANGLE_ACCEPT_THRESHOLD
@@ -54,13 +55,13 @@ class Angle:
         return "{} ({}, {})".format(self.angle, self.armA, self.armB)
 
     def can_match(self, other):
+        if abs(self.ratio - 1 + other.ratio) > 0.075:
+            return False
         first_ratio = self.armA.length / other.armB.length
         second_ratio = self.armB.length / other.armA.length
-        if (first_ratio >= 1 > second_ratio) or first_ratio < 1 <= second_ratio:
-            return False
         lower, higher = (first_ratio, second_ratio) if first_ratio < second_ratio \
             else (second_ratio, first_ratio)
-        return abs(1 - lower / higher) < 0.3
+        return abs(1 - lower / higher) < 0.35
 
     def mirror_similarity(self, other, first_or_last=False):
         target = 540 if first_or_last else 360
