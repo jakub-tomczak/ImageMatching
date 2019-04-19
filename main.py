@@ -21,6 +21,7 @@ def method_one(dataset: Dataset, debug: bool, display_ranking: bool):
         for r in ranking:
             print(" ".join(str(i) for i in r))
     if debug:
+        from utils.debug_helper import print_debug_info
         print_debug_info(dataset, ranking)
 
 
