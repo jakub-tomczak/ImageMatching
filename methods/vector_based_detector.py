@@ -215,6 +215,15 @@ def find_deviations_in_cut(image: Image, start_point: [float, float, int], end_p
         plt.show()
 
 
+def compare_deviations_vectors(vec_a, vec_b, eps: float = 1e-3):
+    measure = 0.0
+    for i in range(len(vec_a)):
+        if vec_a[i] < eps or vec_b[i] < eps:
+            continue
+        measure += abs(vec_a[i] - vec_b[i])**2
+    return measure
+
+
 def find_matching_images(dataset: Dataset):
     find_min_rectangle = False
     find_deviations = True
@@ -240,5 +249,6 @@ def find_matching_images(dataset: Dataset):
         if find_deviations:
             print("image {}".format(image.name))
             for c_index, c_value in enumerate(dataset.images):
+                # sim = compare_deviations_vectors(image.deviations_vector[:, 0], -c_value.deviations_vector[:, 0])
                 sim = spatial.distance.cosine(image.deviations_vector[:, 0], -c_value.deviations_vector[:, 0])
                 print('\t {} vs {}: {}'.format(image.name, c_value.name, sim))
