@@ -7,10 +7,12 @@ from skimage.transform import rotate
 from utils.compare_result import CompareResult
 from utils.dataset_helper import Image, Dataset
 from utils.debug_conf import *
-from utils.debug_helper import show_debug_info, draw_image_spec
 from utils.model import ImageAngleData, Angle, Arm, BaseArm, ExtremeComparePoint, SerialComparePoint
 from utils.mutators import compress_points
 from utils.points_helpers import distance
+
+if DEBUG:
+    from utils.debug_helper import show_debug_info, draw_image_spec
 
 
 def calculate_meaningful_points(coords: [[int, int]], min_distance: float):

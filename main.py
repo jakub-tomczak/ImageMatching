@@ -2,7 +2,6 @@ import argparse
 
 from utils.angle_detector import get_ranking
 from utils.dataset_helper import load_dataset
-from utils.debug_helper import print_debug_info
 from utils.debug_conf import *
 
 
@@ -21,6 +20,7 @@ def run(path, number_of_images, debug=False, display_ranking=True):
         for r in ranking:
             print(" ".join(str(i) for i in r))
     if debug:
+        from utils.debug_helper import print_debug_info
         print_debug_info(dataset, ranking)
 
 

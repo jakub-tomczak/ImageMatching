@@ -1,4 +1,3 @@
-from utils.debug_helper import show_comparing_points
 from utils.model import ComparePoint, ImageAngleData
 
 
@@ -12,23 +11,15 @@ class CompareResult:
                     else (s_angles, f_angles, False)
                 shorter_len = len(shorter)
                 longer_len = len(longer)
-                show = False
                 a_i = 0
                 b_i = longer_len - 1
                 total_sim = 0
-                points = []
                 while a_i < shorter_len and b_i >= 0:
                     ap, bp, sim = CompareResult.find_matching_angle(shorter, longer, a_i, b_i)
-                    if show and sim > 0:
-                        points.append(
-                            (shorter[min(a_i + ap, shorter_len - 1)], longer[max(b_i - bp, 0)]))
                     a_i += ap + 1
                     b_i -= bp + 1
                     total_sim += sim
 
-                if show:
-                    show_comparing_points(first.image.data, f_angles, second.image.data, s_angles, points,
-                                          first_as_first)
                 different_offsets.append(total_sim / max(longer_len, 1))
         self.similarity = max(different_offsets)
 
