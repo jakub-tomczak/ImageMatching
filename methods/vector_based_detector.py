@@ -205,7 +205,7 @@ def find_deviations_in_cut(image: Image, start_point: [float, float, int], end_p
             deviations_vector[i] = diff
 
     image.deviations_vector = deviations_vector
-    print("image {}, vector {}".format(image.name, image.deviations_vector))
+    # print("image {}, vector {}".format(image.name, image.deviations_vector))
     if debug_draw:
         fig, ax = plt.subplots()
         ax.imshow(image.data, interpolation='nearest', cmap=plt.cm.Greys_r)
@@ -245,7 +245,7 @@ def find_matching_images(dataset: Dataset):
             if start is None or end is None:
                 print("Couldn't find coords of deviation vector, image {}".format(image.name))
                 continue
-            find_deviations_in_cut(image, start, end, True)
+            find_deviations_in_cut(image, start, end, False)
 
 
     from scipy import spatial
