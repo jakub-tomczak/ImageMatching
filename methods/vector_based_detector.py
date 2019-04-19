@@ -97,7 +97,7 @@ def get_initial_vertices(image: Image):
     :param image:
     :return: start_point and end_point which represent points and their indices in the image.arms array
     """
-    coords, _ = get_contours(image, True)
+    coords, _ = get_contours(image, False)
     image.points_coords = coords[:-1]
     arms = calculate_arms(image.points_coords)
     base_candidates = find_best_bases(arms)
