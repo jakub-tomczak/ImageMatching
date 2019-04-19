@@ -25,7 +25,7 @@ def method_one(dataset: Dataset, debug: bool, display_ranking: bool):
 
 
 def method_two(dataset: Dataset, debug: bool, display_ranking: bool):
-    find_matching_images(dataset)
+    find_matching_images(dataset, debug, display_ranking)
 
 
 def run(path, number_of_images, debug=False, display_ranking=True):

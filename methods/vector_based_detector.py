@@ -226,7 +226,7 @@ def compare_deviations_vectors(vec_a, vec_b, eps: float = 1e-3):
     return measure
 
 
-def find_matching_images(dataset: Dataset):
+def find_matching_images(dataset: Dataset, debug: bool, display_ranking: bool):
     dataset.set_matching_images()
 
     find_min_rectangle = False
