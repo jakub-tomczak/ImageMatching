@@ -152,7 +152,7 @@ def find_deviations_in_cut(image: Image, start_point: [float, float], end_point:
         plt.show()
 
     deviations_vector = np.zeros((number_of_points_in_vector, 3))
-    for i, point in enumerate(zip(xx[1:-1], yy[1:-1])):
+    for i, point in enumerate(zip(yy[1:-1], xx[1:-1])):
         diff = calculate_deviation_for_point(image, np.array(point), normal_vector_positive, orthogonal_vector_length)
         if diff is None:
             diff = \
