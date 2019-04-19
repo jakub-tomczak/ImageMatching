@@ -225,6 +225,8 @@ def compare_deviations_vectors(vec_a, vec_b, eps: float = 1e-3):
 
 
 def find_matching_images(dataset: Dataset):
+    dataset.set_matching_images()
+
     find_min_rectangle = False
     find_deviations = True
 
@@ -251,4 +253,5 @@ def find_matching_images(dataset: Dataset):
             for c_index, c_value in enumerate(dataset.images):
                 # sim = compare_deviations_vectors(image.deviations_vector[:, 0], -c_value.deviations_vector[:, 0])
                 sim = spatial.distance.cosine(image.deviations_vector[:, 0], -c_value.deviations_vector[:, 0])
-                print('\t {} vs {}: {}'.format(image.name, c_value.name, sim))
+                is_correct = image.correct[0] == c_value.name
+                print('\t {} {} vs {}: {}'.format('-'*10+'>' if is_correct else "", image.name, c_value.name, sim))
