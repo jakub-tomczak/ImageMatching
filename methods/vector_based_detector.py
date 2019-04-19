@@ -3,6 +3,7 @@ from utils.dataset_helper import Image, Dataset
 from utils.debug_conf import DEBUG
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy import spatial
 
 from utils.model import Angle
 from utils.plotting_helper import interpolate_between_points
@@ -46,10 +47,10 @@ def find_base_from_box(image: Image, box: [[int, int]]):
     # find two distances with their indices of the first point in box array
     # assumes that box has 4 rows
     for i in range(len(box)):
-        if i <= point_to_exclude[0] <= i+1:
+        if i <= point_to_exclude[0] <= i + 1:
             # don't draw point between the current and the point_to_exclude
             continue
-        distances.append([i, distance(box[i], box[(i+1) % len(box)])])
+        distances.append([i, distance(box[i], box[(i + 1) % len(box)])])
 
     # sort from the longest to the shortest distance, take the longest one
     longest_distance = sorted(distances, key=(lambda x: x[1]), reverse=True)[0]
@@ -110,12 +111,15 @@ def get_initial_vertices(image: Image):
         return None
 
     image.base_coords = most_probable_base
-    start_point = (image.arms[(most_probable_base.start - 1) % len(image.arms)].a, (most_probable_base.start - 1) % len(image.arms))
-    end_point = (image.arms[(most_probable_base.end + 1) % len(image.arms)].b, (most_probable_base.start + 1) % len(image.arms))
+    start_point = (
+    image.arms[(most_probable_base.start - 1) % len(image.arms)].a, (most_probable_base.start - 1) % len(image.arms))
+    end_point = (
+    image.arms[(most_probable_base.end + 1) % len(image.arms)].b, (most_probable_base.start + 1) % len(image.arms))
     return start_point, end_point
 
 
-def calculate_deviation_for_point(image: Image, start: [float, float], orthogonal_vector, length, debug_draw: bool = False):
+def calculate_deviation_for_point(image: Image, start: [float, float], orthogonal_vector, length,
+                                  debug_draw: bool = False):
     # points to check
     yy, xx = interpolate_between_points(start, start + orthogonal_vector, length, target_type=int)
     start_value = image.data[yy[0], xx[0]]
@@ -134,18 +138,14 @@ def calculate_deviation_for_point(image: Image, start: [float, float], orthogona
                and img.shape[0] > yy[current_index] > 0
 
     def binary_search(data, start_index, stop_index, initial_value, xx, yy):
-        current_index = (start_index+stop_index) // 2
+        current_index = (start_index + stop_index) // 2
         if debug_draw:
-            diff = 1 if current_index+1 < len(xx) else -1
-            ax.plot([xx[current_index], xx[current_index+diff]], [yy[current_index], yy[current_index+diff]], 'r', linewidth=3)
+            diff = 1 if current_index + 1 < len(xx) else -1
+            ax.plot([xx[current_index], xx[current_index + diff]], [yy[current_index], yy[current_index + diff]], 'r',
+                    linewidth=3)
         # check whether we are in bounds
         if not is_within_shape(data, xx, yy, current_index):
             return None
-        # if stop_index - start_index <= 20:
-        #     if has_same_color(initial_value, data, yy, xx, current_index):
-        #         return None
-        #     else:
-        #         return [current_index, yy[current_index], xx[current_index]]
         if has_same_color(initial_value, data, yy, xx, current_index):
             if stop_index - start_index <= 1:
                 return None
@@ -161,7 +161,8 @@ def calculate_deviation_for_point(image: Image, start: [float, float], orthogona
     val = binary_search(image.data, 1, length, start_value, xx, yy)
     if debug_draw and val is not None:
         current_index = val[0]
-        ax.plot([xx[current_index], xx[current_index + 1]], [yy[current_index], yy[current_index + 1]], 'b', linewidth=3)
+        ax.plot([xx[current_index], xx[current_index + 1]], [yy[current_index], yy[current_index + 1]], 'b',
+                linewidth=3)
         plt.show()
     return val
 
@@ -188,16 +189,18 @@ def find_deviations_in_cut(image: Image, start_point: [float, float, int], end_p
             ax.plot([x, x - normal_vector_positive[1]], [y, y - normal_vector_positive[0]], '-b', linewidth=1)
         plt.show()
 
-    deviations_vector = np.zeros((number_of_points_in_vector-2, 3))
+    deviations_vector = np.zeros((number_of_points_in_vector - 2, 3))
     for i, point in enumerate(zip(yy[1:-1], xx[1:-1])):
-        diff = calculate_deviation_for_point(image, np.array(point), normal_vector_positive, orthogonal_vector_length, False)
+        diff = calculate_deviation_for_point(image, np.array(point), normal_vector_positive, orthogonal_vector_length,
+                                             False)
         if diff is None:
             diff = \
-                calculate_deviation_for_point(image, np.array(point), -normal_vector_positive, orthogonal_vector_length, False)
+                calculate_deviation_for_point(image, np.array(point), -normal_vector_positive, orthogonal_vector_length,
+                                              False)
 
             if diff is not None:
                 # "reverse" vector, because here we used -normal_vector_positive
-                diff[0] = diff[0]*(-1.0)
+                diff[0] = diff[0] * (-1.0)
 
         if diff is None:
             deviations_vector[i] = [1e-5, 0, 0]
@@ -218,12 +221,7 @@ def find_deviations_in_cut(image: Image, start_point: [float, float, int], end_p
 
 
 def compare_deviations_vectors(vec_a, vec_b, eps: float = 1e-3):
-    measure = 0.0
-    for i in range(len(vec_a)):
-        if vec_a[i] < eps or vec_b[i] < eps:
-            continue
-        measure += abs(vec_a[i] - vec_b[i])**2
-    return measure
+    return sum([abs(vec_a[i] - vec_b[i]) ** 2 for i in range(len(vec_a)) if vec_a[i] > eps and vec_b[i] > eps])
 
 
 def find_matching_images(dataset: Dataset, debug: bool, display_ranking: bool):
@@ -247,13 +245,12 @@ def find_matching_images(dataset: Dataset, debug: bool, display_ranking: bool):
                 continue
             find_deviations_in_cut(image, start, end, False)
 
-
-    from scipy import spatial
     for index, image in enumerate(dataset.images):
         if find_deviations:
             print("image {}".format(image.name))
-            for c_index, c_value in enumerate(dataset.images):
-                # sim = compare_deviations_vectors(image.deviations_vector[:, 0], -c_value.deviations_vector[:, 0])
-                sim = spatial.distance.cosine(image.deviations_vector[:, 0], -c_value.deviations_vector[:, 0])
-                is_correct = image.correct[0] == c_value.name
-                print('\t {} {} vs {}: {}'.format('-'*10+'>' if is_correct else "", image.name, c_value.name, sim))
+            for comparing_index, comparing_img in enumerate(dataset.images):
+                # sim = compare_deviations_vectors(image.deviations_vector[:, 0], -comparing_img.deviations_vector[:, 0])
+                sim = spatial.distance.cosine(image.deviations_vector[:, 0], -comparing_img.deviations_vector[:, 0])
+                is_correct = image.correct[0] == comparing_img.name
+                print('\t {} {} vs {}: {}'.format('-' * 10 + '>' if is_correct else "", image.name, comparing_img.name,
+                                                  sim))
