@@ -1,8 +1,9 @@
-from matplotlib import pyplot as plt
-from utils.dataset_helper import load_dataset
 import argparse
 
-debug = True
+from utils.angle_detector import get_ranking
+from utils.dataset_helper import load_dataset
+from utils.debug_conf import *
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -12,14 +13,17 @@ def parse_args():
     return args.path, int(args.number_of_images)
 
 
-def main():
-    path, number_of_images = parse_args()
+def run(path, number_of_images, debug=False, display_ranking=True):
     dataset = load_dataset(path, number_of_images)
+    ranking = get_ranking(dataset)
+    if display_ranking:
+        for r in ranking:
+            print(" ".join(str(i) for i in r))
     if debug:
-        dataset.set_matching_images()
-    for image in dataset.images:
-        print(f'correct answer for image {image.path} is {image.correct}.')
+        from utils.debug_helper import print_debug_info
+        print_debug_info(dataset, ranking)
 
 
 if __name__ == "__main__":
-    main()
+    path, number_of_images = parse_args()
+    run(path, number_of_images, DEBUG, RESULT_DISPLAY_RANKING)
