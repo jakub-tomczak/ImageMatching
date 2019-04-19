@@ -194,9 +194,11 @@ def find_deviations_in_cut(image: Image, start_point: [float, float, int], end_p
         if diff is None:
             diff = \
                 calculate_deviation_for_point(image, np.array(point), -normal_vector_positive, orthogonal_vector_length, False)
-        #     # print("blue")
-        # else:
-        #     # print("yellow")
+
+            if diff is not None:
+                # "reverse" vector, because here we used -normal_vector_positive
+                diff[0] = diff[0]*(-1.0)
+
         if diff is None:
             deviations_vector[i] = [1e-5, 0, 0]
         else:
