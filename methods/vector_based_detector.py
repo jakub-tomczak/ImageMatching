@@ -250,7 +250,7 @@ def find_matching_images(dataset: Dataset, debug: bool, display_ranking: bool):
             print("image {}".format(image.name))
             for comparing_index, comparing_img in enumerate(dataset.images):
                 # sim = compare_deviations_vectors(image.deviations_vector[:, 0], -comparing_img.deviations_vector[:, 0])
-                sim = spatial.distance.cosine(image.deviations_vector[:, 0], -comparing_img.deviations_vector[:, 0])
+                sim = spatial.distance.cosine(image.deviations_vector[:, 0], -comparing_img.deviations_vector[::-1, 0])
                 is_correct = image.correct[0] == comparing_img.name
                 print('\t {} {} vs {}: {}'.format('-' * 10 + '>' if is_correct else "", image.name, comparing_img.name,
                                                   sim))
