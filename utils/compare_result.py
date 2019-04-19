@@ -56,9 +56,6 @@ class CompareResult:
 
     @staticmethod
     def get_aligned_points(a: [ComparePoint], b: [ComparePoint], a_i, b_i):
-        def is_in_range():
-            return a_i + a_off < len_a and b_i - b_off >= 0
-
         a_point = a[a_i]
         b_point = b[b_i]
         a_off = 0
@@ -67,14 +64,16 @@ class CompareResult:
         len_a = len(a)
         dif = a_point.progress_difference(b_point)
 
-        while (dif > range_com or dif < -range_com) and is_in_range():
+        while dif > range_com or dif < -range_com:
             if dif < -range_com:
+                if a_i + a_off + 1 >= len_a:
+                    return None, None, a_off, b_off
                 a_off += 1
                 a_point = a[a_i + a_off]
             elif dif > range_com:
+                if b_i - b_off - 1 < 0:
+                    return None, None, a_off, b_off
                 b_off += 1
                 b_point = b[b_i - b_off]
             dif = a_point.progress_difference(b_point)
-        if not is_in_range():
-            return None, None, a_off, b_off
         return a_point, b_point, a_off, b_off
