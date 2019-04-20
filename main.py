@@ -15,8 +15,7 @@ def parse_args():
     return args.path, int(args.number_of_images)
 
 
-def method_one(dataset: Dataset, debug: bool, display_ranking: bool):
-    ranking = get_ranking(dataset)
+def process_ranking(dataset: Dataset, ranking: [[int]], debug: bool, display_ranking: bool):
     if display_ranking:
         for r in ranking:
             print(" ".join(str(i) for i in r))
@@ -25,15 +24,20 @@ def method_one(dataset: Dataset, debug: bool, display_ranking: bool):
         print_debug_info(dataset, ranking)
 
 
-def method_two(dataset: Dataset, debug: bool, display_ranking: bool):
-    find_matching_images(dataset, debug, display_ranking)
+def method_one(dataset: Dataset):
+    return get_ranking(dataset)
+
+
+def method_two(dataset: Dataset):
+    return find_matching_images(dataset)
 
 
 def run(path, number_of_images, debug=False, display_ranking=True):
     dataset = load_dataset(path, number_of_images)
 
-    method = method_one
-    method(dataset, debug, display_ranking)
+    method = method_two
+    ranking = method(dataset)
+    process_ranking(dataset, ranking, debug, display_ranking)
 
 
 if __name__ == "__main__":
