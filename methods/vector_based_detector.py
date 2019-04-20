@@ -112,9 +112,10 @@ def get_initial_vertices(image: Image):
 
     image.base_coords = most_probable_base
     start_point = (
-    image.arms[(most_probable_base.start - 1) % len(image.arms)].a, (most_probable_base.start - 1) % len(image.arms))
+        image.arms[(most_probable_base.start - 1) % len(image.arms)].a,
+        (most_probable_base.start - 1) % len(image.arms))
     end_point = (
-    image.arms[(most_probable_base.end + 1) % len(image.arms)].b, (most_probable_base.start + 1) % len(image.arms))
+        image.arms[(most_probable_base.end + 1) % len(image.arms)].b, (most_probable_base.start + 1) % len(image.arms))
     return start_point, end_point
 
 
@@ -224,7 +225,12 @@ def compare_deviations_vectors(vec_a, vec_b, eps: float = 1e-3):
     return sum([abs(vec_a[i] - vec_b[i]) ** 2 for i in range(len(vec_a)) if vec_a[i] > eps and vec_b[i] > eps])
 
 
-def find_matching_images(dataset: Dataset, debug: bool, display_ranking: bool):
+def results_to_ranking(results: [float], the_lower_the_better: bool = True):
+    rank = [x[1] for x in sorted(results, reverse=(not the_lower_the_better))]
+    return rank
+
+
+def find_matching_images(dataset: Dataset):
     dataset.set_matching_images()
 
     find_min_rectangle = False
@@ -245,12 +251,25 @@ def find_matching_images(dataset: Dataset, debug: bool, display_ranking: bool):
                 continue
             find_deviations_in_cut(image, start, end, False)
 
+    ranking = []
     for index, image in enumerate(dataset.images):
         if find_deviations:
-            print("image {}".format(image.name))
-            for comparing_index, comparing_img in enumerate(dataset.images):
-                # sim = compare_deviations_vectors(image.deviations_vector[:, 0], -comparing_img.deviations_vector[:, 0])
-                sim = spatial.distance.cosine(image.deviations_vector[:, 0], -comparing_img.deviations_vector[::-1, 0])
-                is_correct = image.correct[0] == comparing_img.name
-                print('\t {} {} vs {}: {}'.format('-' * 10 + '>' if is_correct else "", image.name, comparing_img.name,
-                                                  sim))
+            comparing_method = spatial.distance.cosine  # compare_deviations_vectors
+            if DEBUG:
+                print("image {}".format(image.name))
+                image_rank = []
+                for comparing_index, comparing_img in enumerate(dataset.images):
+                    if index == comparing_index:
+                        continue
+                    sim = comparing_method(image.deviations_vector[:, 0], -comparing_img.deviations_vector[::-1, 0])
+                    image_rank.append((sim, comparing_img.name))
+                    is_correct = image.correct[0] == comparing_img.name
+                    print('\t {} {} vs {}: {}'.format('-' * 10 + '>' if is_correct else "", image.name,
+                                                          comparing_img.name, sim))
+                ranking.append(results_to_ranking(image_rank))
+            else:
+                image_rank = [
+                    (comparing_method(image.deviations_vector[:, 0], -comparing_img.deviations_vector[::-1, 0]), comparing_img.name)
+                    for comparing_img in dataset.images if comparing_img.name != image.name]
+                ranking.append(results_to_ranking(image_rank))
+    return ranking
