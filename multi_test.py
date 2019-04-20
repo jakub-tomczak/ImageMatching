@@ -1,6 +1,6 @@
 import os
 
-from main import run, RESULT_DISPLAY_TOTAL_POINTS
+from main import run, RESULT_DISPLAY_TOTAL_POINTS, method_one, method_two
 from utils.debug_helper import INFO, ENDC, get_collected_points, TOTAL_INFO
 
 if __name__ == '__main__':
@@ -13,7 +13,7 @@ if __name__ == '__main__':
     to_test = sorted(to_test, key=lambda o: o[0])
     for dirname, images in to_test:
         print(INFO + dirname + ENDC)
-        run(dirname, images, True, False)
+        run(dirname, images, True, False, method=method_two)
 
     if RESULT_DISPLAY_TOTAL_POINTS:
         points, total = get_collected_points()

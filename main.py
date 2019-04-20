@@ -32,10 +32,11 @@ def method_two(dataset: Dataset):
     return find_matching_images(dataset)
 
 
-def run(path, number_of_images, debug=False, display_ranking=True):
+def run(path, number_of_images, debug=False, display_ranking=True, method=None):
     dataset = load_dataset(path, number_of_images)
 
-    method = method_two
+    if method is None:
+        method = method_two
     ranking = method(dataset)
     process_ranking(dataset, ranking, debug, display_ranking)
 
